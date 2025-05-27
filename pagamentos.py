@@ -4,10 +4,7 @@ from sqlalchemy.orm import sessionmaker
 from models.database import engine
 from models.tables import Pagamentos
 from configuracoes import load_parametro,send_email
-import locale
 
-# Set the locale to Brazilian Portuguese for currency formatting
-locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
 
 
 # Create a new session
