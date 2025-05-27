@@ -176,3 +176,5 @@ cython_debug/
 .pypirc
 
 .streamlit
+
+local_database.db
