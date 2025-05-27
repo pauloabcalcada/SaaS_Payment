@@ -10,26 +10,26 @@ pagamentos_page = st.Page("pagamentos.py", title="Próximos Vencimentos", icon="
 analises_page = st.Page("analises.py", title="Análises", icon=":material/bar_chart:")
 #atualiza_pagamentos_page = st.Page("atualiza_pagamentos.py", title="Atualizar pagamentos", icon=":material/refresh:")
 
-if not st.user.is_logged_in:
-    if st.button("Log in"):
-        st.login()
-else:
-    if st.button("Log out"):
-        st.logout()
-    st.write(f"Hello, {st.user.name}!")
+# if not st.user.is_logged_in:
+#     if st.button("Log in"):
+#         st.login()
+# else:
+#     if st.button("Log out"):
+#         st.logout()
+#     st.write(f"Hello, {st.user.name}!")
 
 
 
-    pg = st.navigation(
-        {"Menu":[cadastro_clientes_page, 
-                configuracoes_page,
-                pagamentos_page,
-                analises_page,
-                #atualiza_pagamentos_page
-                ]
-        
-        })
+pg = st.navigation(
+    {"Menu":[cadastro_clientes_page, 
+            configuracoes_page,
+            pagamentos_page,
+            analises_page,
+            #atualiza_pagamentos_page
+            ]
+    
+    })
 
-    pg.run()
+pg.run()
 
 
