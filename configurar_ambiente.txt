@@ -1,0 +1,8 @@
+#renomear script.sh quando for mudar de projeto, alterando nome do env no script
+#alterar requirements.txt de acordo com os pacotes necessários pro projeto
+
+#tornar o script executável
+chmod +x setup_env.sh
+
+#executar o script
+./setup_env.sh

@@ -1,0 +1,121 @@
+Id_empresa,Nome_da_Empresa,Prazo_Vencimento,Email,Valor_da_Conta,Status_Pagamento,Status_Dias_Vencimento,Data_do_Pagamento,Dias_Pagamento_Vencimento
+1,Empresa 1,2025-01-24,pauloazevedo@poli.ufrj.br,4270.81,Pago,Venceu há mais de 15 dias,2025-01-21,-3.0
+1,Empresa 1,2025-02-24,pauloazevedo@poli.ufrj.br,4270.81,Pago,Venceu há mais de 15 dias,2025-02-22,-2.0
+1,Empresa 1,2025-03-24,pauloazevedo@poli.ufrj.br,4270.81,Pago,Venceu há mais de 15 dias,2025-03-24,0.0
+1,Empresa 1,2025-04-24,pauloazevedo@poli.ufrj.br,4270.81,Pago,Venceu há mais de 15 dias,2025-04-28,4.0
+1,Empresa 1,2025-05-21,pauloazevedo@poli.ufrj.br,4270.81,Pendente,5-15 dias para o Vencimento,,
+1,Empresa 1,2025-06-24,pauloazevedo@poli.ufrj.br,4270.81,Pendente,+30 dias para o Vencimento,,
+1,Empresa 1,2025-07-24,pauloazevedo@poli.ufrj.br,4270.81,Pendente,+30 dias para o Vencimento,,
+1,Empresa 1,2025-08-24,pauloazevedo@poli.ufrj.br,4270.81,Pendente,+30 dias para o Vencimento,,
+1,Empresa 1,2025-09-24,pauloazevedo@poli.ufrj.br,4270.81,Pendente,+30 dias para o Vencimento,,
+1,Empresa 1,2025-10-24,pauloazevedo@poli.ufrj.br,4270.81,Pendente,+30 dias para o Vencimento,,
+1,Empresa 1,2025-11-24,pauloazevedo@poli.ufrj.br,4270.81,Pendente,+30 dias para o Vencimento,,
+1,Empresa 1,2025-12-24,pauloazevedo@poli.ufrj.br,4270.81,Pendente,+30 dias para o Vencimento,,
+2,Empresa 2,2025-01-18,pauloazevedo@poli.ufrj.br,3024.53,Pago,Venceu há mais de 15 dias,2025-01-19,1.0
+2,Empresa 2,2025-02-18,pauloazevedo@poli.ufrj.br,3024.53,Pago,Venceu há mais de 15 dias,2025-02-18,0.0
+2,Empresa 2,2025-05-17,pauloazevedo@poli.ufrj.br,3024.53,Pago,Venceu há mais de 15 dias,2025-03-19,1.0
+2,Empresa 2,2025-04-18,pauloazevedo@poli.ufrj.br,3024.53,Pago,Venceu há mais de 15 dias,2025-04-14,-4.0
+2,Empresa 2,2025-05-17,pauloazevedo@poli.ufrj.br,3024.53,Pendente,Até 5 dias para o Vencimento,,
+2,Empresa 2,2025-06-18,pauloazevedo@poli.ufrj.br,3024.53,Pendente,+30 dias para o Vencimento,,
+2,Empresa 2,2025-07-18,pauloazevedo@poli.ufrj.br,3024.53,Pendente,+30 dias para o Vencimento,,
+2,Empresa 2,2025-08-18,pauloazevedo@poli.ufrj.br,3024.53,Pendente,+30 dias para o Vencimento,,
+2,Empresa 2,2025-09-18,pauloazevedo@poli.ufrj.br,3024.53,Pendente,+30 dias para o Vencimento,,
+2,Empresa 2,2025-10-18,pauloazevedo@poli.ufrj.br,3024.53,Pendente,+30 dias para o Vencimento,,
+2,Empresa 2,2025-11-18,pauloazevedo@poli.ufrj.br,3024.53,Pendente,+30 dias para o Vencimento,,
+2,Empresa 2,2025-12-18,pauloazevedo@poli.ufrj.br,3024.53,Pendente,+30 dias para o Vencimento,,
+3,Empresa 3,2025-01-11,pauloazevedo@poli.ufrj.br,2076.64,Pago,Venceu há mais de 15 dias,2025-01-15,4.0
+3,Empresa 3,2025-02-11,pauloazevedo@poli.ufrj.br,2076.64,Pago,Venceu há mais de 15 dias,2025-02-06,-5.0
+3,Empresa 3,2025-03-11,pauloazevedo@poli.ufrj.br,2076.64,Pago,Venceu há mais de 15 dias,2025-03-07,-4.0
+3,Empresa 3,2025-04-11,pauloazevedo@poli.ufrj.br,2076.64,Pago,Venceu há mais de 15 dias,2025-04-10,-1.0
+3,Empresa 3,2025-05-11,pauloazevedo@poli.ufrj.br,2076.64,Pago,Venceu há menos de 15 dias,2025-05-14,3.0
+3,Empresa 3,2025-06-11,pauloazevedo@poli.ufrj.br,2076.64,Pendente,15-30 dias para o Vencimento,,
+3,Empresa 3,2025-07-11,pauloazevedo@poli.ufrj.br,2076.64,Pendente,+30 dias para o Vencimento,,
+3,Empresa 3,2025-08-11,pauloazevedo@poli.ufrj.br,2076.64,Pendente,+30 dias para o Vencimento,,
+3,Empresa 3,2025-09-11,pauloazevedo@poli.ufrj.br,2076.64,Pendente,+30 dias para o Vencimento,,
+3,Empresa 3,2025-10-11,pauloazevedo@poli.ufrj.br,2076.64,Pendente,+30 dias para o Vencimento,,
+3,Empresa 3,2025-11-11,pauloazevedo@poli.ufrj.br,2076.64,Pendente,+30 dias para o Vencimento,,
+3,Empresa 3,2025-12-11,pauloazevedo@poli.ufrj.br,2076.64,Pendente,+30 dias para o Vencimento,,
+4,Empresa 4,2025-01-03,pauloazevedo@poli.ufrj.br,9642.85,Pago,Venceu há mais de 15 dias,2024-12-31,-3.0
+4,Empresa 4,2025-02-03,pauloazevedo@poli.ufrj.br,9642.85,Pago,Venceu há mais de 15 dias,2025-01-29,-5.0
+4,Empresa 4,2025-03-03,pauloazevedo@poli.ufrj.br,9642.85,Pago,Venceu há mais de 15 dias,2025-03-01,-2.0
+4,Empresa 4,2025-04-03,pauloazevedo@poli.ufrj.br,9642.85,Pago,Venceu há mais de 15 dias,2025-04-01,-2.0
+4,Empresa 4,2025-05-03,pauloazevedo@poli.ufrj.br,9642.85,Pago,Venceu há menos de 15 dias,2025-05-01,-2.0
+4,Empresa 4,2025-06-03,pauloazevedo@poli.ufrj.br,9642.85,Pendente,15-30 dias para o Vencimento,,
+4,Empresa 4,2025-07-03,pauloazevedo@poli.ufrj.br,9642.85,Pendente,+30 dias para o Vencimento,,
+4,Empresa 4,2025-08-03,pauloazevedo@poli.ufrj.br,9642.85,Pendente,+30 dias para o Vencimento,,
+4,Empresa 4,2025-09-03,pauloazevedo@poli.ufrj.br,9642.85,Pendente,+30 dias para o Vencimento,,
+4,Empresa 4,2025-10-03,pauloazevedo@poli.ufrj.br,9642.85,Pendente,+30 dias para o Vencimento,,
+4,Empresa 4,2025-11-03,pauloazevedo@poli.ufrj.br,9642.85,Pendente,+30 dias para o Vencimento,,
+4,Empresa 4,2025-12-03,pauloazevedo@poli.ufrj.br,9642.85,Pendente,+30 dias para o Vencimento,,
+5,Empresa 5,2025-01-15,pauloazevedo@poli.ufrj.br,6246.19,Pago,Venceu há mais de 15 dias,2025-01-10,-5.0
+5,Empresa 5,2025-02-15,pauloazevedo@poli.ufrj.br,6246.19,Pago,Venceu há mais de 15 dias,2025-02-16,1.0
+5,Empresa 5,2025-03-15,pauloazevedo@poli.ufrj.br,6246.19,Pago,Venceu há mais de 15 dias,2025-03-10,-5.0
+5,Empresa 5,2025-04-15,pauloazevedo@poli.ufrj.br,6246.19,Pago,Venceu há mais de 15 dias,2025-04-20,5.0
+5,Empresa 5,2025-05-15,pauloazevedo@poli.ufrj.br,6246.19,Pago,Venceu há menos de 15 dias,2025-05-20,5.0
+5,Empresa 5,2025-06-15,pauloazevedo@poli.ufrj.br,6246.19,Pendente,15-30 dias para o Vencimento,,
+5,Empresa 5,2025-07-15,pauloazevedo@poli.ufrj.br,6246.19,Pendente,+30 dias para o Vencimento,,
+5,Empresa 5,2025-08-15,pauloazevedo@poli.ufrj.br,6246.19,Pendente,+30 dias para o Vencimento,,
+5,Empresa 5,2025-09-15,pauloazevedo@poli.ufrj.br,6246.19,Pendente,+30 dias para o Vencimento,,
+5,Empresa 5,2025-10-15,pauloazevedo@poli.ufrj.br,6246.19,Pendente,+30 dias para o Vencimento,,
+5,Empresa 5,2025-11-15,pauloazevedo@poli.ufrj.br,6246.19,Pendente,+30 dias para o Vencimento,,
+5,Empresa 5,2025-12-15,pauloazevedo@poli.ufrj.br,6246.19,Pendente,+30 dias para o Vencimento,,
+6,Empresa 6,2025-01-27,pauloazevedo@poli.ufrj.br,3038.57,Pago,Venceu há mais de 15 dias,2025-01-24,-3.0
+6,Empresa 6,2025-02-27,pauloazevedo@poli.ufrj.br,3038.57,Pago,Venceu há mais de 15 dias,2025-02-25,-2.0
+6,Empresa 6,2025-03-27,pauloazevedo@poli.ufrj.br,3038.57,Pago,Venceu há mais de 15 dias,2025-03-22,-5.0
+6,Empresa 6,2025-04-27,pauloazevedo@poli.ufrj.br,3038.57,Pago,Venceu há mais de 15 dias,2025-05-01,4.0
+6,Empresa 6,2025-05-18,pauloazevedo@poli.ufrj.br,3038.57,Pendente,5-15 dias para o Vencimento,,
+6,Empresa 6,2025-06-27,pauloazevedo@poli.ufrj.br,3038.57,Pendente,+30 dias para o Vencimento,,
+6,Empresa 6,2025-07-27,pauloazevedo@poli.ufrj.br,3038.57,Pendente,+30 dias para o Vencimento,,
+6,Empresa 6,2025-08-27,pauloazevedo@poli.ufrj.br,3038.57,Pendente,+30 dias para o Vencimento,,
+6,Empresa 6,2025-09-27,pauloazevedo@poli.ufrj.br,3038.57,Pendente,+30 dias para o Vencimento,,
+6,Empresa 6,2025-10-27,pauloazevedo@poli.ufrj.br,3038.57,Pendente,+30 dias para o Vencimento,,
+6,Empresa 6,2025-11-27,pauloazevedo@poli.ufrj.br,3038.57,Pendente,+30 dias para o Vencimento,,
+6,Empresa 6,2025-12-27,pauloazevedo@poli.ufrj.br,3038.57,Pendente,+30 dias para o Vencimento,,
+7,Empresa 7,2025-01-12,pauloazevedo@poli.ufrj.br,8542.87,Pago,Venceu há mais de 15 dias,2025-01-09,-3.0
+7,Empresa 7,2025-02-12,pauloazevedo@poli.ufrj.br,8542.87,Pago,Venceu há mais de 15 dias,2025-02-16,4.0
+7,Empresa 7,2025-03-12,pauloazevedo@poli.ufrj.br,8542.87,Pago,Venceu há mais de 15 dias,2025-03-11,-1.0
+7,Empresa 7,2025-04-12,pauloazevedo@poli.ufrj.br,8542.87,Pago,Venceu há mais de 15 dias,2025-04-07,-5.0
+7,Empresa 7,2025-05-12,pauloazevedo@poli.ufrj.br,8542.87,Pago,Venceu há menos de 15 dias,2025-05-13,1.0
+7,Empresa 7,2025-06-12,pauloazevedo@poli.ufrj.br,8542.87,Pendente,15-30 dias para o Vencimento,,
+7,Empresa 7,2025-07-12,pauloazevedo@poli.ufrj.br,8542.87,Pendente,+30 dias para o Vencimento,,
+7,Empresa 7,2025-08-12,pauloazevedo@poli.ufrj.br,8542.87,Pendente,+30 dias para o Vencimento,,
+7,Empresa 7,2025-09-12,pauloazevedo@poli.ufrj.br,8542.87,Pendente,+30 dias para o Vencimento,,
+7,Empresa 7,2025-10-12,pauloazevedo@poli.ufrj.br,8542.87,Pendente,+30 dias para o Vencimento,,
+7,Empresa 7,2025-11-12,pauloazevedo@poli.ufrj.br,8542.87,Pendente,+30 dias para o Vencimento,,
+7,Empresa 7,2025-12-12,pauloazevedo@poli.ufrj.br,8542.87,Pendente,+30 dias para o Vencimento,,
+8,Empresa 8,2025-01-16,pauloazevedo@poli.ufrj.br,1222.6,Pago,Venceu há mais de 15 dias,2025-01-13,-3.0
+8,Empresa 8,2025-02-16,pauloazevedo@poli.ufrj.br,1222.6,Pago,Venceu há mais de 15 dias,2025-02-18,2.0
+8,Empresa 8,2025-03-16,pauloazevedo@poli.ufrj.br,1222.6,Pago,Venceu há mais de 15 dias,2025-03-19,3.0
+8,Empresa 8,2025-04-16,pauloazevedo@poli.ufrj.br,1222.6,Pago,Venceu há mais de 15 dias,2025-04-12,-4.0
+8,Empresa 8,2025-05-14,pauloazevedo@poli.ufrj.br,1222.6,Pendente,Até 5 dias para o Vencimento,,
+8,Empresa 8,2025-06-16,pauloazevedo@poli.ufrj.br,1222.6,Pendente,+30 dias para o Vencimento,,
+8,Empresa 8,2025-07-16,pauloazevedo@poli.ufrj.br,1222.6,Pendente,+30 dias para o Vencimento,,
+8,Empresa 8,2025-08-16,pauloazevedo@poli.ufrj.br,1222.6,Pendente,+30 dias para o Vencimento,,
+8,Empresa 8,2025-09-16,pauloazevedo@poli.ufrj.br,1222.6,Pendente,+30 dias para o Vencimento,,
+8,Empresa 8,2025-10-16,pauloazevedo@poli.ufrj.br,1222.6,Pendente,+30 dias para o Vencimento,,
+8,Empresa 8,2025-11-16,pauloazevedo@poli.ufrj.br,1222.6,Pendente,+30 dias para o Vencimento,,
+8,Empresa 8,2025-12-16,pauloazevedo@poli.ufrj.br,1222.6,Pendente,+30 dias para o Vencimento,,
+9,Empresa 9,2025-01-05,pauloazevedo@poli.ufrj.br,226.74,Pago,Venceu há mais de 15 dias,2025-01-10,5.0
+9,Empresa 9,2025-02-05,pauloazevedo@poli.ufrj.br,226.74,Pago,Venceu há mais de 15 dias,2025-02-04,-1.0
+9,Empresa 9,2025-03-05,pauloazevedo@poli.ufrj.br,226.74,Pago,Venceu há mais de 15 dias,2025-03-06,1.0
+9,Empresa 9,2025-04-05,pauloazevedo@poli.ufrj.br,226.74,Pago,Venceu há mais de 15 dias,2025-04-03,-2.0
+9,Empresa 9,2025-05-05,pauloazevedo@poli.ufrj.br,226.74,Pago,Venceu há menos de 15 dias,2025-04-30,-5.0
+9,Empresa 9,2025-06-05,pauloazevedo@poli.ufrj.br,226.74,Pendente,15-30 dias para o Vencimento,,
+9,Empresa 9,2025-07-05,pauloazevedo@poli.ufrj.br,226.74,Pendente,+30 dias para o Vencimento,,
+9,Empresa 9,2025-08-05,pauloazevedo@poli.ufrj.br,226.74,Pendente,+30 dias para o Vencimento,,
+9,Empresa 9,2025-09-05,pauloazevedo@poli.ufrj.br,226.74,Pendente,+30 dias para o Vencimento,,
+9,Empresa 9,2025-10-05,pauloazevedo@poli.ufrj.br,226.74,Pendente,+30 dias para o Vencimento,,
+9,Empresa 9,2025-11-05,pauloazevedo@poli.ufrj.br,226.74,Pendente,+30 dias para o Vencimento,,
+9,Empresa 9,2025-12-05,pauloazevedo@poli.ufrj.br,226.74,Pendente,+30 dias para o Vencimento,,
+10,Empresa 10,2025-01-03,pauloazevedo@poli.ufrj.br,547.1,Pago,Venceu há mais de 15 dias,2024-12-30,-4.0
+10,Empresa 10,2025-02-03,pauloazevedo@poli.ufrj.br,547.1,Pago,Venceu há mais de 15 dias,2025-02-08,5.0
+10,Empresa 10,2025-03-03,pauloazevedo@poli.ufrj.br,547.1,Pago,Venceu há mais de 15 dias,2025-03-04,1.0
+10,Empresa 10,2025-04-03,pauloazevedo@poli.ufrj.br,547.1,Pago,Venceu há mais de 15 dias,2025-04-07,4.0
+10,Empresa 10,2025-05-03,pauloazevedo@poli.ufrj.br,547.1,Pago,Venceu há menos de 15 dias,2025-05-01,-2.0
+10,Empresa 10,2025-06-03,pauloazevedo@poli.ufrj.br,547.1,Pendente,15-30 dias para o Vencimento,,
+10,Empresa 10,2025-07-03,pauloazevedo@poli.ufrj.br,547.1,Pendente,+30 dias para o Vencimento,,
+10,Empresa 10,2025-08-03,pauloazevedo@poli.ufrj.br,547.1,Pendente,+30 dias para o Vencimento,,
+10,Empresa 10,2025-09-03,pauloazevedo@poli.ufrj.br,547.1,Pendente,+30 dias para o Vencimento,,
+10,Empresa 10,2025-10-03,pauloazevedo@poli.ufrj.br,547.1,Pendente,+30 dias para o Vencimento,,
+10,Empresa 10,2025-11-03,pauloazevedo@poli.ufrj.br,547.1,Pendente,+30 dias para o Vencimento,,
+10,Empresa 10,2025-12-03,pauloazevedo@poli.ufrj.br,547.1,Pendente,+30 dias para o Vencimento,,

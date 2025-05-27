@@ -1,0 +1,20 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Streamlit Debugger",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "/Users/larissagadelha/opt/anaconda3/envs/saas_pay/bin/streamlit", // Adjust path if not using a virtual environment
+            "args": [
+                "run",
+                "${file}" // This will run the currently open Streamlit file
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}
