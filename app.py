@@ -8,7 +8,6 @@ cadastro_clientes_page = st.Page("cadastro_clientes.py", title="Atualização do
 configuracoes_page = st.Page("configuracoes.py", title="Configurações", icon=":material/settings:")
 pagamentos_page = st.Page("pagamentos.py", title="Próximos Vencimentos", icon=":material/notification_important:")
 analises_page = st.Page("analises.py", title="Análises", icon=":material/bar_chart:")
-#atualiza_pagamentos_page = st.Page("atualiza_pagamentos.py", title="Atualizar pagamentos", icon=":material/refresh:")
 
 # if not st.user.is_logged_in:
 #     if st.button("Log in"):
@@ -21,11 +20,11 @@ analises_page = st.Page("analises.py", title="Análises", icon=":material/bar_ch
 
 
 pg = st.navigation(
-    {"Menu":[cadastro_clientes_page, 
-            configuracoes_page,
+    {"Menu":[
             pagamentos_page,
             analises_page,
-            #atualiza_pagamentos_page
+            cadastro_clientes_page, 
+            configuracoes_page
             ]
     
     })
