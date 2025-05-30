@@ -110,8 +110,8 @@ with tab_mensagens:
         "Mensagem do Alerta Antes do Vencimento", value=load_parametro("mensagem_antes")
     )
 
-    destinatario_antes = st.text_input("Destinatário do E-mail (Antes do Vencimento)", "destinatario@exemplo.com")
 
+    st.write("---")
 
     assunto_dia = st.text_input(
         "Assunto do Alerta no Dia do Vencimento", value=load_parametro("assunto_dia")
@@ -119,6 +119,9 @@ with tab_mensagens:
     mensagem_dia = st.text_area(
         "Mensagem do Alerta no Dia do Vencimento", value=load_parametro("mensagem_dia")
     )
+
+    st.write("---")
+    
     assunto_pos = st.text_input(
         "Assunto do Alerta Após o Vencimento", value=load_parametro("assunto_pos")
     )
