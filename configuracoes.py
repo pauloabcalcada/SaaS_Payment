@@ -112,13 +112,6 @@ with tab_mensagens:
 
     destinatario_antes = st.text_input("Destinatário do E-mail (Antes do Vencimento)", "destinatario@exemplo.com")
 
-    if st.button("Enviar E-mail (Antes do Vencimento)"):
-        resultado = send_email(
-            remetente_email, remetente_password, smtp_server, smtp_port, use_tls,
-            destinatario_antes, assunto_antes, mensagem_antes
-        )
-        st.info(resultado)
-
 
     assunto_dia = st.text_input(
         "Assunto do Alerta no Dia do Vencimento", value=load_parametro("assunto_dia")
