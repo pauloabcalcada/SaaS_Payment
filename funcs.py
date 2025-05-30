@@ -12,6 +12,7 @@ import calendar
 import streamlit as st
 from cryptography.fernet import Fernet
 
+# functions beginning
 
 def send_email(remetente_email, remetente_password, smtp_server, smtp_port, use_tls, destinatario, assunto, mensagem):
     try:
