@@ -6,15 +6,13 @@ from models.tables import Pagamentos
 from models.database import engine
 from datetime import datetime
 from funcs import update_status_dias_vencimento,decrypt_database
+import os
 
-
-
-#key_decript
 
 key_decript = st.secrets["database"]["encryption_key"]
 
-# Decrypt the database file
-decrypt_database('encrypted_database.db', 'local_database.db', key_decript) 
+if not os.path.exists('local_database.db'):
+    decrypt_database('encrypted_database.db', 'local_database.db', key_decript)
 
 
 # Initialize the database session

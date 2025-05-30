@@ -5,13 +5,12 @@ from models.database import engine
 from models.tables import Pagamentos
 from configuracoes import load_parametro,send_email
 from funcs import decrypt_database
-
+import os
 
 key_decript = st.secrets["database"]["encryption_key"]
 
-# Decrypt the database file
-decrypt_database('encrypted_database.db', 'local_database.db', key_decript) 
-
+if not os.path.exists('local_database.db'):
+    decrypt_database('encrypted_database.db', 'local_database.db', key_decript)
 
 # Create a new session
 Session = sessionmaker(bind=engine)

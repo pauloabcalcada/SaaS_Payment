@@ -9,13 +9,14 @@ import calendar
 from io import BytesIO
 import pandas as pd
 from sqlalchemy.exc import SQLAlchemyError
-
+import os
 
 
 key_decript = st.secrets["database"]["encryption_key"]
 
-# Decrypt the database file
-decrypt_database('encrypted_database.db', 'local_database.db', key_decript) 
+if not os.path.exists('local_database.db'):
+    decrypt_database('encrypted_database.db', 'local_database.db', key_decript)
+
 
 Session = sessionmaker(bind=engine)
 session = Session()
