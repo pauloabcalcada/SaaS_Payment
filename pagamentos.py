@@ -85,7 +85,7 @@ def get_email_alerts():
                     "Assunto": assunto_antes,
                     "Mensagem": mensagem_antes
                         .replace("{NOME_EMPRESA}", pagamento.Nome_da_Empresa)
-                        .replace("{VALOR_PAGAMENTO}", f"{pagamento.Valor_da_Conta:.2f}")
+                        .replace("{VALOR_PAGAMENTO}", f"R$ {pagamento.Valor_da_Conta:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
                         .replace("{DIAS_VENCIMENTO}", str(diff))
                 })
             elif diff < 0 and abs(diff) % periodicidade_apos == 0:
@@ -103,7 +103,7 @@ def get_email_alerts():
                     "Assunto": assunto_dia,
                     "Mensagem": mensagem_dia
                         .replace("{NOME_EMPRESA}", pagamento.Nome_da_Empresa)
-                        .replace("{VALOR_PAGAMENTO}", f"{pagamento.Valor_da_Conta:.2f}")
+                        .replace("{VALOR_PAGAMENTO}", f"R$ {pagamento.Valor_da_Conta:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
                 })
 
         # Convert the alerts to a DataFrame
