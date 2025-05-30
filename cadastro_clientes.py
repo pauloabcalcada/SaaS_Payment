@@ -4,11 +4,18 @@ from sqlalchemy.orm import sessionmaker
 from models.tables import Cliente,Pagamentos
 from models.database import engine
 from datetime import datetime, timedelta
-from funcs import generate_pagamentos,delete_pagamentos,categorize_status_dias_vencimento,update_status_dias_vencimento
+from funcs import generate_pagamentos,delete_pagamentos,categorize_status_dias_vencimento,update_status_dias_vencimento,decrypt_database
 import calendar
 from io import BytesIO
 import pandas as pd
 from sqlalchemy.exc import SQLAlchemyError
+
+
+
+key_decript = st.secrets["database"]["encryption_key"]
+
+# Decrypt the database file
+decrypt_database('encrypted_database.db', 'local_database.db', key_decript) 
 
 Session = sessionmaker(bind=engine)
 session = Session()

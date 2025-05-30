@@ -4,7 +4,15 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from models.tables import Configuracoes
 from models.database import engine
-from funcs import send_email
+from funcs import send_email,decrypt_database
+
+
+
+key_decript = st.secrets["database"]["encryption_key"]
+
+# Decrypt the database file
+decrypt_database('encrypted_database.db', 'local_database.db', key_decript) 
+
 
 # Create a new session
 Session = sessionmaker(bind=engine)

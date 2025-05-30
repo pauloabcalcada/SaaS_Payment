@@ -9,6 +9,8 @@ from models.database import engine
 from sqlalchemy.sql import text
 from datetime import datetime
 import calendar
+import streamlit as st
+from cryptography.fernet import Fernet
 
 
 def send_email(remetente_email, remetente_password, smtp_server, smtp_port, use_tls, destinatario, assunto, mensagem):
@@ -230,3 +232,31 @@ def update_status_dias_vencimento(session):
     except Exception as e:
         session.rollback()
         #print(f"Error updating Status_Dias_Vencimento: {e}")
+
+
+
+
+def decrypt_database(input_file, output_file, key):
+    """
+    Decrypts the encrypted SQLite database file.
+    :param input_file: Path to the encrypted database file.
+    :param output_file: Path to save the decrypted database file.
+    :param key: Encryption key (used for decryption).
+    """
+    # Read the encrypted database file
+    with open(input_file, 'rb') as f:
+        encrypted_data = f.read()
+
+    # Decrypt the data
+    fernet = Fernet(key)
+    decrypted_data = fernet.decrypt(encrypted_data)
+
+    # Save the decrypted data to a new file
+    with open(output_file, 'wb') as f:
+        f.write(decrypted_data)
+
+# Load the encryption key from secrets.toml
+#encryption_key = st.secrets["database"]["encryption_key"]
+
+# Decrypt the database
+#decrypt_database('local_database.db', 'decrypted_database.db', encryption_key)
