@@ -1,7 +1,7 @@
 import streamlit as st
 
 # Configuração da página
-st.set_page_config(page_title="Sistema de Cobrança", layout="wide")
+st.set_page_config(page_title="Ecofuture", layout="wide")
 st.logo("https://static.wixstatic.com/media/e2c1bb_0089a806f76e4f13849e3dc66ab3c7de~mv2.png/v1/crop/x_0,y_0,w_855,h_402/fill/w_266,h_125,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/eco.png",  
         size="large", 
         link="https://www.ecofuturebrasil.com", icon_image=None)
