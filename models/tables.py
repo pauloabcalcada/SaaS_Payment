@@ -1,7 +1,5 @@
-from sqlalchemy import Column, Integer, String, Float,ForeignKey,Date
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Date, Text
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
 
 Base = declarative_base()
 
@@ -10,10 +8,10 @@ class Cliente(Base):
 
     Id_empresa = Column(Integer, primary_key=True, autoincrement=True)
     Nome_da_Empresa = Column(String(255), nullable=False)
-    CNPJ = Column(String, nullable=False)
-    Telefone = Column(String, nullable=False)
-    Email = Column(String, nullable=False)
-    Endereco = Column(String, nullable=False)
+    CNPJ = Column(String(32), nullable=False)
+    Telefone = Column(String(32), nullable=False)
+    Email = Column(String(255), nullable=False)
+    Endereco = Column(String(255), nullable=False)
     Dia_do_Vencimento = Column(Integer, nullable=False)
     Valor_da_Conta = Column(Float, nullable=False)
 
@@ -29,11 +27,11 @@ class Cliente(Base):
 
     @classmethod
     def read(cls, session, id_empresa):
-        return session.query(cls).filter_by(id_empresa=id_empresa).first()
+        return session.query(cls).filter_by(Id_empresa=id_empresa).first()
 
     @classmethod
     def update(cls, session, id_empresa, **kwargs):
-        cliente = session.query(cls).filter_by(id_empresa=id_empresa).first()
+        cliente = session.query(cls).filter_by(Id_empresa=id_empresa).first()
         for key, value in kwargs.items():
             setattr(cliente, key, value)
         session.commit()
@@ -41,24 +39,23 @@ class Cliente(Base):
 
     @classmethod
     def delete(cls, session, id_empresa):
-        cliente = session.query(cls).filter_by(id_empresa=id_empresa).first()
+        cliente = session.query(cls).filter_by(Id_empresa=id_empresa).first()
         session.delete(cliente)
         session.commit()
         return cliente
-    
+
 class Configuracoes(Base):
     __tablename__ = 'Configuracoes'
 
     Id_Parametro = Column(Integer, primary_key=True, autoincrement=True)
     Nome_Parametro = Column(String(255), nullable=False)
-    Valor_Atual = Column(String, nullable=False)  # Use String or Text for longer values
+    Valor_Atual = Column(Text, nullable=False)
 
-# Define the Pagamentos model
 class Pagamentos(Base):
     __tablename__ = 'Pagamentos'
 
     Id_pagamento = Column(Integer, primary_key=True, autoincrement=True)
-    Id_empresa = Column(Integer, ForeignKey('Clientes.Id_empresa'), nullable=False)  # Foreign key to Clientes
+    Id_empresa = Column(Integer, ForeignKey('Clientes.Id_empresa', ondelete="CASCADE"), nullable=False)
     Nome_da_Empresa = Column(String(255), nullable=False)
     Prazo_Vencimento = Column(Date, nullable=False)
     Email = Column(String(255), nullable=False)
@@ -67,3 +64,4 @@ class Pagamentos(Base):
     Status_Dias_Vencimento = Column(String(255), nullable=True)
     Data_do_Pagamento = Column(Date, nullable=True)
     Dias_Pagamento_Vencimento = Column(Integer, nullable=True)
+    Tipo_Pagamento = Column(String(32), nullable=True)  # New column for PostgreSQL

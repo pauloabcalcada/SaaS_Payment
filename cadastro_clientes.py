@@ -1,10 +1,10 @@
 import streamlit as st
-from sqlalchemy import create_engine, Column, Integer, String, Float, Date, text
+from sqlalchemy import create_engine, Column, Integer, String, Float, Date, text,extract
 from sqlalchemy.orm import sessionmaker
 from models.tables import Cliente,Pagamentos
 from models.database import engine
 from datetime import datetime, timedelta
-from funcs import generate_pagamentos,delete_pagamentos,categorize_status_dias_vencimento,update_status_dias_vencimento,decrypt_database
+from funcs import generate_pagamentos,delete_pagamentos,categorize_status_dias_vencimento,update_status_dias_vencimento
 import calendar
 from io import BytesIO
 import pandas as pd
@@ -12,10 +12,10 @@ from sqlalchemy.exc import SQLAlchemyError
 import os
 
 
-key_decript = st.secrets["database"]["encryption_key"]
+# key_decript = st.secrets["database"]["encryption_key"]
 
-if not os.path.exists('local_database.db'):
-    decrypt_database('encrypted_database.db', 'local_database.db', key_decript)
+# if not os.path.exists('local_database.db'):
+#     decrypt_database('encrypted_database.db', 'local_database.db', key_decript)
 
 
 Session = sessionmaker(bind=engine)
@@ -30,176 +30,405 @@ with tab_pagamentos:
 
     # Add a new payment
     with st.expander("Adicionar Pagamento"):
-        # Fetch all clients and format the selectbox options
-        clients = session.query(Cliente).all()
-        client_options = {f"{cliente.Id_empresa} - {cliente.Nome_da_Empresa}": cliente.Id_empresa for cliente in clients}
-        selected_option = st.selectbox("Selecione o Cliente", list(client_options.keys()), key="select_cliente_pagamento")
+        tab1_add_pay, tab2_add_pay = st.tabs(["Via tela", "Via carga de dados"])
 
-        # Get the corresponding Id_empresa for the selected option
-        selected_id = client_options[selected_option]
+        # --- VIA TELA ---
+        with tab1_add_pay:
+            # Fetch all clients and format the selectbox options
+            clients = session.query(Cliente).all()
+            client_options = {f"{cliente.Id_empresa} - {cliente.Nome_da_Empresa}": cliente.Id_empresa for cliente in clients}
+            selected_option = st.selectbox("Selecione o Cliente", list(client_options.keys()), key="select_cliente_pagamento")
 
-        # Fetch the selected client
-        cliente = session.query(Cliente).filter(Cliente.Id_empresa == selected_id).first()
+            # Get the corresponding Id_empresa for the selected option
+            selected_id = client_options[selected_option]
 
-        # Input widget for the month of the payment
-        mes_pagamento = st.selectbox(
-            "Mês do Pagamento",
-            [f"{month:02d}-{datetime.now().year}" for month in range(1, 13)],
-            index=datetime.now().month - 1,
-            key="mes_pagamento",
-        )
+            # Fetch the selected client
+            cliente = session.query(Cliente).filter(Cliente.Id_empresa == selected_id).first()
 
-        # Display Dia do Vencimento from the Cliente table
-        dia_do_vencimento = cliente.Dia_do_Vencimento if cliente else 1
-        st.number_input(
-            "Dia do Vencimento",
-            min_value=1,
-            max_value=31,
-            value=dia_do_vencimento,
-            step=1,
-            key="dia_do_vencimento",
-            disabled=True,
-        )
+            # Input widget for the month of the payment
+            mes_pagamento = st.selectbox(
+                "Mês do Pagamento",
+                [f"{month:02d}-{datetime.now().year}" for month in range(1, 13)],
+                index=datetime.now().month - 1,
+                key="mes_pagamento",
+            )
 
-        # Fetch the selected month and year
-        selected_month, selected_year = map(int, mes_pagamento.split("-"))
+            # Display Dia do Vencimento from the Cliente table
+            dia_do_vencimento = cliente.Dia_do_Vencimento if cliente else 1
+            st.number_input(
+                "Dia do Vencimento",
+                min_value=1,
+                max_value=31,
+                value=dia_do_vencimento,
+                step=1,
+                key="dia_do_vencimento",
+                disabled=True,
+            )
 
-        # Fetch the corresponding Valor_da_Conta for the selected client and month
-        valor_da_conta_default = cliente.Valor_da_Conta if cliente else 0.0
+            # Fetch the selected month and year
+            selected_month, selected_year = map(int, mes_pagamento.split("-"))
 
-        # Input widget for payment details
-        data_pagamento = st.date_input("Data do Pagamento", value=datetime.today(), key="data_pagamento")
-        valor_pagamento = st.number_input(
-            "Valor do Pagamento", format="%.2f", value=valor_da_conta_default, key="valor_pagamento"
-        )
+            # Fetch the corresponding Valor_da_Conta for the selected client and month
+            valor_da_conta_default = cliente.Valor_da_Conta if cliente else 0.0
 
-        # Check if a payment for this month already exists
-        if st.button("Adicionar Pagamento", key="adicionar_pagamento"):
-            # Calculate Prazo_Vencimento based on Dia_do_Vencimento
-            last_day_of_month = calendar.monthrange(selected_year, selected_month)[1]
-            prazo_vencimento = datetime(
-                selected_year, selected_month, min(dia_do_vencimento, last_day_of_month)
-            ).date()
+            # Input widget for payment details
+            data_pagamento = st.date_input("Data do Pagamento", value=datetime.today(), key="data_pagamento")
+            valor_pagamento = st.number_input(
+                "Valor do Pagamento", format="%.2f", value=valor_da_conta_default, key="valor_pagamento"
+            )
 
-            existing_payment = session.query(Pagamentos).filter(
-                Pagamentos.Id_empresa == cliente.Id_empresa,
-                text("strftime('%Y-%m', Prazo_Vencimento) = :year_month"),
-            ).params(year_month=f"{selected_year}-{selected_month:02d}").first()
+            # Fetch unique payment types from the Pagamentos table
+            tipos_pagamento = session.query(Pagamentos.Tipo_Pagamento).distinct().all()
+            tipos_pagamento = [tp[0] for tp in tipos_pagamento if tp[0]]  # Remove None values
 
-            # Store the state to indicate an existing payment or new payment details
-            st.session_state["payment_action"] = {
-                "existing_payment": existing_payment,
-                "prazo_vencimento": prazo_vencimento,
-                "data_pagamento": data_pagamento,
-                "valor_pagamento": valor_pagamento,
-                "cliente": cliente,
-            }
+            # If no types exist yet, provide some defaults
+            if not tipos_pagamento:
+                tipos_pagamento = ["Mensalidade","Evento", "Outro"]
 
-        # Handle existing payment actions
-        if "payment_action" in st.session_state:
-            payment_action = st.session_state["payment_action"]
-            existing_payment = payment_action["existing_payment"]
-            prazo_vencimento = payment_action["prazo_vencimento"]
-            data_pagamento = payment_action["data_pagamento"]
-            valor_pagamento = payment_action["valor_pagamento"]
-            cliente = payment_action["cliente"]
+            tipo_pagamento = st.selectbox(
+                "Tipo de Pagamento",
+                tipos_pagamento,
+                key="tipo_pagamento"
+            )
 
-            if existing_payment:
-                st.warning("Já existe um pagamento para este mês. Escolha uma ação abaixo.")
-                col1_add_pay, col2_add_pay = st.columns(2)
+            # Check if a payment for this month already exists
+            if st.button("Adicionar Pagamento", key="adicionar_pagamento"):
+                # Calculate Prazo_Vencimento based on Dia_do_Vencimento
+                last_day_of_month = calendar.monthrange(selected_year, selected_month)[1]
+                prazo_vencimento = datetime(
+                    selected_year, selected_month, min(dia_do_vencimento, last_day_of_month)
+                ).date()
 
-                with col1_add_pay:
-                    if st.button("Substituir o pagamento existente", key="replace_payment"):
-                        try:
-                            # Explicitly update the existing payment using an SQL query
-                            session.execute(
-                                text(
-                                    """
-                                    UPDATE Pagamentos
-                                    SET Data_do_Pagamento = :data_pagamento,
-                                        Valor_da_Conta = :valor_pagamento,
-                                        Status_Pagamento = 'Pago',
-                                        Dias_Pagamento_Vencimento = :dias_pagamento_vencimento,
-                                        Status_Dias_Vencimento = :status_dias_vencimento
-                                    WHERE Id_empresa = :id_empresa AND strftime('%Y-%m', Prazo_Vencimento) = :year_month
-                                    """
-                                ),
-                                {
-                                    "data_pagamento": data_pagamento,
-                                    "valor_pagamento": valor_pagamento,
-                                    "dias_pagamento_vencimento": (data_pagamento - prazo_vencimento).days,
-                                    "status_dias_vencimento": categorize_status_dias_vencimento(
+                existing_payment = session.query(Pagamentos).filter(
+                    Pagamentos.Id_empresa == cliente.Id_empresa,
+                    text('TO_CHAR("Prazo_Vencimento", \'YYYY-MM\') = :year_month'),
+                ).params(year_month=f"{selected_year}-{selected_month:02d}").first()
+
+                # Store the state to indicate an existing payment or new payment details
+                st.session_state["payment_action"] = {
+                    "existing_payment": existing_payment,
+                    "prazo_vencimento": prazo_vencimento,
+                    "data_pagamento": data_pagamento,
+                    "valor_pagamento": valor_pagamento,
+                    "cliente": cliente,
+                    "tipo_pagamento": tipo_pagamento,
+                }
+
+            # Handle existing payment actions
+            if "payment_action" in st.session_state:
+                payment_action = st.session_state["payment_action"]
+                existing_payment = payment_action["existing_payment"]
+                prazo_vencimento = payment_action["prazo_vencimento"]
+                data_pagamento = payment_action["data_pagamento"]
+                valor_pagamento = payment_action["valor_pagamento"]
+                cliente = payment_action["cliente"]
+                tipo_pagamento = payment_action["tipo_pagamento"]
+
+                if existing_payment:
+                    st.warning("Já existe um pagamento para este mês. Escolha uma ação abaixo.")
+                    col1_add_pay, col2_add_pay = st.columns(2)
+
+                    with col1_add_pay:
+                        if st.button("Substituir o pagamento existente", key="replace_payment"):
+                            try:
+                                # Explicitly update the existing payment using an SQL query
+                                # Fetch the existing payment(s) for the given month and client
+                                pagamentos_to_update = session.query(Pagamentos).filter(
+                                    Pagamentos.Id_empresa == cliente.Id_empresa,
+                                    text('TO_CHAR("Prazo_Vencimento", \'YYYY-MM\') = :year_month'),
+                                ).params(year_month=f"{selected_year}-{selected_month:02d}").all()
+
+                                for pagamento in pagamentos_to_update:
+                                    pagamento.Data_do_Pagamento = data_pagamento
+                                    pagamento.Valor_da_Conta = valor_pagamento
+                                    pagamento.Status_Pagamento = "Pago"
+                                    pagamento.Dias_Pagamento_Vencimento = (data_pagamento - prazo_vencimento).days
+                                    pagamento.Status_Dias_Vencimento = categorize_status_dias_vencimento(
+                                        (prazo_vencimento - datetime.now().date()).days
+                                    )
+                                    pagamento.Tipo_Pagamento = tipo_pagamento
+
+                                session.commit()
+                                st.success("Pagamento existente substituído com sucesso!")
+                                del st.session_state["payment_action"]  # Clear the state after action
+                            except Exception as e:
+                                session.rollback()
+                                st.error(f"Erro ao substituir pagamento: {e}")
+
+                    with col2_add_pay:
+                        if st.button("Adicionar outro pagamento para este mês", key="add_new_payment"):
+                            try:
+                                # Insert a new payment for the same month
+                                new_pagamento = Pagamentos(
+                                    Id_empresa=cliente.Id_empresa,
+                                    Nome_da_Empresa=cliente.Nome_da_Empresa,
+                                    Prazo_Vencimento=prazo_vencimento,
+                                    Email=cliente.Email,
+                                    Valor_da_Conta=valor_pagamento,
+                                    Status_Pagamento="Pago",
+                                    Status_Dias_Vencimento=categorize_status_dias_vencimento(
                                         (prazo_vencimento - datetime.now().date()).days
                                     ),
-                                    "id_empresa": cliente.Id_empresa,
-                                    "year_month": f"{selected_year}-{selected_month:02d}",
-                                },
-                            )
-                            session.commit()
-                            st.success("Pagamento existente substituído com sucesso!")
-                            del st.session_state["payment_action"]  # Clear the state after action
-                        except Exception as e:
-                            session.rollback()
-                            st.error(f"Erro ao substituir pagamento: {e}")
+                                    Data_do_Pagamento=data_pagamento,
+                                    Dias_Pagamento_Vencimento=(data_pagamento - prazo_vencimento).days,
+                                    Tipo_Pagamento = tipo_pagamento,
+                                )
+                                session.add(new_pagamento)
+                                session.commit()
+                                st.success("Novo pagamento adicionado com sucesso!")
+                                del st.session_state["payment_action"]  # Clear the state after action
+                            except Exception as e:
+                                session.rollback()
+                                st.error(f"Erro ao adicionar novo pagamento: {e}")
+                else:
+                    # Insert the new payment if no existing payment is found
+                    try:
+                        new_pagamento = Pagamentos(
+                            Id_empresa=cliente.Id_empresa,
+                            Nome_da_Empresa=cliente.Nome_da_Empresa,
+                            Prazo_Vencimento=prazo_vencimento,
+                            Email=cliente.Email,
+                            Valor_da_Conta=valor_pagamento,
+                            Status_Pagamento="Pago",
+                            Status_Dias_Vencimento=categorize_status_dias_vencimento(
+                                (prazo_vencimento - datetime.now().date()).days
+                            ),
+                            Data_do_Pagamento=data_pagamento,
+                            Dias_Pagamento_Vencimento=(data_pagamento - prazo_vencimento).days,
+                            Tipo_Pagamento = tipo_pagamento,
+                        )
+                        session.add(new_pagamento)
+                        session.commit()
+                        st.success("Pagamento adicionado com sucesso!")
+                        del st.session_state["payment_action"]  # Clear the state after action
+                    except Exception as e:
+                        session.rollback()
+                        st.error(f"Erro ao adicionar pagamento: {e}")
 
-                with col2_add_pay:
-                    if st.button("Adicionar outro pagamento para este mês", key="add_new_payment"):
-                        try:
-                            # Insert a new payment for the same month
-                            new_pagamento = Pagamentos(
-                                Id_empresa=cliente.Id_empresa,
-                                Nome_da_Empresa=cliente.Nome_da_Empresa,
-                                Prazo_Vencimento=prazo_vencimento,
-                                Email=cliente.Email,
-                                Valor_da_Conta=valor_pagamento,
-                                Status_Pagamento="Pago",
-                                Status_Dias_Vencimento=categorize_status_dias_vencimento(
-                                    (prazo_vencimento - datetime.now().date()).days
-                                ),
-                                Data_do_Pagamento=data_pagamento,
-                                Dias_Pagamento_Vencimento=(data_pagamento - prazo_vencimento).days,
+
+        # --- VIA CARGA DE DADOS ---
+        with tab2_add_pay:
+            col1_pay_add, col2_pay_add = st.columns(2)
+
+            # Download modelo de pagamentos
+            with col1_pay_add:
+                st.write("Baixar todos os pagamentos em CSV ou XLSX")
+                download_format_pay = st.selectbox("Formato do arquivo", ["XLSX", "CSV"], key="download_format_pay")
+                if st.button("Baixar Arquivo", key="download_file_pay"):
+                    try:
+                        pagamentos = session.query(Pagamentos).all()
+                        pagamentos_data = [
+                            {
+                                "Id_pagamento": p.Id_pagamento,
+                                "Id_empresa": p.Id_empresa,
+                                "Nome_da_Empresa": p.Nome_da_Empresa,
+                                "Prazo_Vencimento": p.Prazo_Vencimento,
+                                "Email": p.Email,
+                                "Valor_da_Conta": p.Valor_da_Conta,
+                                "Status_Pagamento": p.Status_Pagamento,
+                                "Status_Dias_Vencimento": p.Status_Dias_Vencimento,
+                                "Data_do_Pagamento": p.Data_do_Pagamento,
+                                "Dias_Pagamento_Vencimento": p.Dias_Pagamento_Vencimento,
+                                "Tipo_Pagamento": p.Tipo_Pagamento,
+                            }
+                            for p in pagamentos
+                        ]
+                        pagamentos_df = pd.DataFrame(pagamentos_data)
+                        if download_format_pay == "CSV":
+                            csv_buffer = BytesIO()
+                            pagamentos_df.to_csv(csv_buffer, index=False, encoding="utf-8")
+                            csv_buffer.seek(0)
+                            st.download_button(
+                                label="Clique para baixar",
+                                data=csv_buffer,
+                                file_name="Pagamentos_add.csv",
+                                mime="text/csv",
                             )
-                            session.add(new_pagamento)
-                            session.commit()
-                            st.success("Novo pagamento adicionado com sucesso!")
-                            del st.session_state["payment_action"]  # Clear the state after action
-                        except Exception as e:
-                            session.rollback()
-                            st.error(f"Erro ao adicionar novo pagamento: {e}")
-            else:
-                # Insert the new payment if no existing payment is found
-                try:
-                    new_pagamento = Pagamentos(
-                        Id_empresa=cliente.Id_empresa,
-                        Nome_da_Empresa=cliente.Nome_da_Empresa,
-                        Prazo_Vencimento=prazo_vencimento,
-                        Email=cliente.Email,
-                        Valor_da_Conta=valor_pagamento,
-                        Status_Pagamento="Pago",
-                        Status_Dias_Vencimento=categorize_status_dias_vencimento(
-                            (prazo_vencimento - datetime.now().date()).days
-                        ),
-                        Data_do_Pagamento=data_pagamento,
-                        Dias_Pagamento_Vencimento=(data_pagamento - prazo_vencimento).days,
-                    )
-                    session.add(new_pagamento)
-                    session.commit()
-                    st.success("Pagamento adicionado com sucesso!")
-                    del st.session_state["payment_action"]  # Clear the state after action
-                except Exception as e:
-                    session.rollback()
-                    st.error(f"Erro ao adicionar pagamento: {e}")
-        
+                        else:
+                            xlsx_buffer = BytesIO()
+                            pagamentos_df.to_excel(xlsx_buffer, index=False, engine="openpyxl")
+                            xlsx_buffer.seek(0)
+                            st.download_button(
+                                label="Clique para baixar",
+                                data=xlsx_buffer,
+                                file_name="Pagamentos_add.xlsx",
+                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            )
+                    except Exception as e:
+                        st.error(f"Erro ao exportar pagamentos: {e}")
+
+            # Upload e processamento do arquivo
+            with col2_pay_add:
+                st.write("Importar pagamentos via CSV ou Excel")
+                uploaded_file = st.file_uploader(
+                    "Selecione o arquivo (CSV ou Excel)", type=["csv", "xlsx", "xls"], key="upload_payments"
+                )
+
+                if uploaded_file is not None:
+                    try:
+                        if uploaded_file.name.endswith(".csv"):
+                            payments_df = pd.read_csv(uploaded_file, sep=None, engine="python")
+                        elif uploaded_file.name.endswith((".xlsx", ".xls")):
+                            payments_df = pd.read_excel(uploaded_file)
+
+                        # Checagem das colunas obrigatórias
+                        required_columns = [
+                            "Id_empresa", "Nome_da_Empresa", "Prazo_Vencimento", "Email", "Valor_da_Conta",
+                            "Status_Pagamento", "Status_Dias_Vencimento", "Data_do_Pagamento",
+                            "Dias_Pagamento_Vencimento", "Tipo_Pagamento"
+                        ]
+                        missing_cols = [col for col in required_columns if col not in payments_df.columns]
+                        if missing_cols:
+                            st.error(f"O arquivo deve conter as colunas obrigatórias: {', '.join(missing_cols)}")
+                        else:
+                            # Normaliza datas
+                            payments_df["Prazo_Vencimento"] = pd.to_datetime(payments_df["Prazo_Vencimento"]).dt.date
+                            if "Data_do_Pagamento" in payments_df.columns:
+                                payments_df["Data_do_Pagamento"] = pd.to_datetime(payments_df["Data_do_Pagamento"], errors="coerce").dt.date
+
+                            # Verificação de pagamentos existentes
+                            existing_payments = []
+                            new_payments = []
+                            for _, row in payments_df.iterrows():
+                                # Chave composta: Id_empresa, mês/ano de Prazo_Vencimento, Tipo_Pagamento
+                                prazo_vencimento = row["Prazo_Vencimento"]
+                                tipo_pagamento = row["Tipo_Pagamento"]
+                                id_empresa = row["Id_empresa"]
+                                month = prazo_vencimento.month
+                                year = prazo_vencimento.year
+
+                                existing = session.query(Pagamentos).filter(
+                                    Pagamentos.Id_empresa == id_empresa,
+                                    Pagamentos.Tipo_Pagamento == tipo_pagamento,
+                                    extract('year', Pagamentos.Prazo_Vencimento) == year,
+                                    extract('month', Pagamentos.Prazo_Vencimento) == month
+                                ).first()
+
+                                if existing:
+                                    existing_payments.append({
+                                        "Id_empresa": id_empresa,
+                                        "Nome_da_Empresa": row["Nome_da_Empresa"],
+                                        "Prazo_Vencimento": prazo_vencimento,
+                                        "Tipo_Pagamento": tipo_pagamento,
+                                        "Id_pagamento": existing.Id_pagamento
+                                    })
+                                else:
+                                    new_payments.append(row)
+
+                            # Se houver pagamentos existentes, exibe e pede confirmação
+                            if existing_payments:
+                                st.warning("Pagamentos já existentes encontrados para os seguintes registros:")
+                                st.dataframe(pd.DataFrame(existing_payments),hide_index=True)
+                                if st.button("Substituir pagamentos existentes e adicionar novos", key="replace_existing_payments"):
+                                    try:
+                                        # Substitui pagamentos existentes
+                                        for ep in existing_payments:
+                                            pagamento = session.query(Pagamentos).filter_by(Id_pagamento=ep["Id_pagamento"]).first()
+                                            if pagamento:
+                                                row = payments_df[
+                                                    (payments_df["Id_empresa"] == ep["Id_empresa"]) &
+                                                    (payments_df["Prazo_Vencimento"] == ep["Prazo_Vencimento"]) &
+                                                    (payments_df["Tipo_Pagamento"] == ep["Tipo_Pagamento"])
+                                                ].iloc[0]
+                                                pagamento.Nome_da_Empresa = row["Nome_da_Empresa"]
+                                                pagamento.Prazo_Vencimento = row["Prazo_Vencimento"]
+                                                pagamento.Email = row["Email"]
+                                                pagamento.Valor_da_Conta = float(row["Valor_da_Conta"]) if pd.notnull(row["Valor_da_Conta"]) else None
+                                                pagamento.Status_Pagamento = row["Status_Pagamento"]
+                                                pagamento.Status_Dias_Vencimento = row["Status_Dias_Vencimento"]
+                                                pagamento.Data_do_Pagamento = row["Data_do_Pagamento"]
+                                                pagamento.Dias_Pagamento_Vencimento = int(row["Dias_Pagamento_Vencimento"]) if pd.notnull(row["Dias_Pagamento_Vencimento"]) else None
+                                                pagamento.Tipo_Pagamento = row["Tipo_Pagamento"]
+                                        # Adiciona novos pagamentos
+                                        for row in new_payments:
+                                            novo_pagamento = Pagamentos(
+                                                Id_empresa=int(row["Id_empresa"]),
+                                                Nome_da_Empresa=row["Nome_da_Empresa"],
+                                                Prazo_Vencimento=row["Prazo_Vencimento"],
+                                                Email=row["Email"],
+                                                Valor_da_Conta=float(row["Valor_da_Conta"]) if pd.notnull(row["Valor_da_Conta"]) else None,
+                                                Status_Pagamento=row["Status_Pagamento"],
+                                                Status_Dias_Vencimento=row["Status_Dias_Vencimento"],
+                                                Data_do_Pagamento=data_pagamento,
+                                                Dias_Pagamento_Vencimento=int(row["Dias_Pagamento_Vencimento"]) if pd.notnull(row["Dias_Pagamento_Vencimento"]) else None,
+                                                Tipo_Pagamento=row["Tipo_Pagamento"],
+                                            )
+                                            session.add(novo_pagamento)
+                                        session.commit()
+                                        st.success("Pagamentos substituídos/adicionados com sucesso!")
+                                    except Exception as e:
+                                        session.rollback()
+                                        st.error(f"Erro ao substituir/adicionar pagamentos: {e}")
+                                if st.button("Cancelar operação", key="cancel_replace_payments"):
+                                    session.rollback()
+                                    st.info("Operação cancelada. Nenhuma alteração foi feita.")
+                            else:
+                                # Se não houver conflitos, adiciona todos como novos pagamentos
+                                try:
+                                    for _, row in payments_df.iterrows():
+                                        novo_pagamento = Pagamentos(
+                                            Id_empresa=row["Id_empresa"],
+                                            Nome_da_Empresa=row["Nome_da_Empresa"],
+                                            Prazo_Vencimento=row["Prazo_Vencimento"],
+                                            Email=row["Email"],
+                                            Valor_da_Conta=row["Valor_da_Conta"],
+                                            Status_Pagamento=row["Status_Pagamento"],
+                                            Status_Dias_Vencimento=row["Status_Dias_Vencimento"],
+                                            Data_do_Pagamento=row["Data_do_Pagamento"],
+                                            Dias_Pagamento_Vencimento=row["Dias_Pagamento_Vencimento"],
+                                            Tipo_Pagamento=row["Tipo_Pagamento"],
+                                        )
+                                        session.add(novo_pagamento)
+                                    session.commit()
+                                    st.success("Pagamentos adicionados com sucesso!")
+                                except Exception as e:
+                                    session.rollback()
+                                    st.error(f"Erro ao adicionar pagamentos: {e}")
+                    except Exception as e:
+                        session.rollback()
+                        st.error(f"Erro ao importar pagamentos: {e}")        
 
     # View all payments
     with st.expander("Visualizar Pagamentos"):
         try:
             update_status_dias_vencimento(session)
             # Use pandas to read the SQL query into a DataFrame
-            query = "SELECT * FROM Pagamentos"
-            pagamentos_df = pd.read_sql(query, con=engine).loc[:, ["Nome_da_Empresa", "Prazo_Vencimento","Data_do_Pagamento","Status_Pagamento","Status_Dias_Vencimento" ,"Valor_da_Conta"]]
+            # Fetch all payments using ORM and convert to DataFrame
+            pagamentos = session.query(Pagamentos).all()
+            pagamentos_data = [
+                {
+                    "Nome_da_Empresa": p.Nome_da_Empresa,
+                    "Prazo_Vencimento": p.Prazo_Vencimento,
+                    "Data_do_Pagamento": p.Data_do_Pagamento,
+                    "Status_Pagamento": p.Status_Pagamento,
+                    "Status_Dias_Vencimento": p.Status_Dias_Vencimento,
+                    "Valor_da_Conta": p.Valor_da_Conta,
+                    "Tipo_Pagamento": p.Tipo_Pagamento,
+                }
+                for p in pagamentos
+            ]
+            pagamentos_df = pd.DataFrame(pagamentos_data)
+            pagamentos_df = pagamentos_df.loc[:, [
+                "Nome_da_Empresa",
+                "Prazo_Vencimento",
+                "Data_do_Pagamento",
+                "Status_Pagamento",
+                "Status_Dias_Vencimento",
+                "Valor_da_Conta",
+                "Tipo_Pagamento"
+            ]]
+            # Ordena por Nome da Empresa e Prazo do Vencimento
+            pagamentos_df = pagamentos_df.sort_values(by=["Nome_da_Empresa", "Prazo_Vencimento"], ascending=[True, True])
             # Rename columns for better readability
-            pagamentos_df.columns = ["Nome da Empresa","Prazo do Vencimento" ,"Data do Pagamento","Status do Pagamento","Status do Vencimento" ,"Valor do Pagamento"]
+            pagamentos_df.columns = [
+                "Nome da Empresa",
+                "Prazo do Vencimento",
+                "Data do Pagamento",
+                "Status do Pagamento",
+                "Status do Vencimento",
+                "Valor do Pagamento",
+                "Tipo de Pagamento"
+            ]
 
             if not pagamentos_df.empty:
                 st.dataframe(pagamentos_df, hide_index=True)  # Display the DataFrame in Streamlit
@@ -232,6 +461,7 @@ with tab_pagamentos:
                     delete_pagamentos(session, selected_id)
                     session.commit()
                     st.success("Todos os pagamentos pendentes foram deletados com sucesso!")
+                    st.rerun()  # Refresh the page to reflect changes
                 except Exception as e:
                     session.rollback()
                     st.error(f"Erro ao deletar pagamentos pendentes: {e}")
@@ -253,10 +483,11 @@ with tab_pagamentos:
                     # Delete payments for the selected month and year
                     session.query(Pagamentos).filter(
                         Pagamentos.Id_empresa == selected_id,
-                        text("strftime('%Y-%m', Prazo_Vencimento) = :year_month"),
+                        text('TO_CHAR("Prazo_Vencimento", \'YYYY-MM\') = :year_month'),
                     ).params(year_month=f"{selected_year}-{selected_month:02d}").delete(synchronize_session=False)
                     session.commit()
                     st.success("Pagamentos do mês selecionado foram deletados com sucesso!")
+                    st.rerun()  # Refresh the page to reflect changes
                 except Exception as e:
                     session.rollback()
                     st.error(f"Erro ao deletar pagamentos do mês selecionado: {e}")
@@ -312,24 +543,47 @@ with tab_client:
             col1_add,col2_add = st.columns(2)
             with col1_add:
                 st.write("Baixa planilha modelo de carga")
-                if st.button("Baixar CSV",key="download_csv_add"):
+                download_format = st.selectbox("Formato do arquivo", ["XLSX","CSV"], key="download_format_add")
+                if st.button("Baixar Arquivo", key="download_file_add"):
                     try:
-                        # Fetch all clients from the database
-                        query = "SELECT Nome_da_Empresa, CNPJ, Telefone, Email, Endereco, Dia_do_Vencimento, Valor_da_Conta FROM Clientes"
-                        clientes_df = pd.read_sql(query, con=engine)
+                        # Fetch all clients from the database using ORM
+                        clientes = session.query(Cliente).all()
+                        # Convert ORM objects to a list of dicts for DataFrame
+                        clientes_data = [
+                            {
+                                "Nome_da_Empresa": c.Nome_da_Empresa,
+                                "CNPJ": c.CNPJ,
+                                "Telefone": c.Telefone,
+                                "Email": c.Email,
+                                "Endereco": c.Endereco,
+                                "Dia_do_Vencimento": c.Dia_do_Vencimento,
+                                "Valor_da_Conta": c.Valor_da_Conta,
+                            }
+                            for c in clientes
+                        ]
+                        clientes_df = pd.DataFrame(clientes_data)
 
-                        # Convert the DataFrame to a CSV file
-                        csv_buffer = BytesIO()
-                        clientes_df.to_csv(csv_buffer, index=False, encoding="utf-8")
-                        csv_buffer.seek(0)
-
-                        # Provide the CSV file for download
-                        st.download_button(
-                            label="Clique para baixar",
-                            data=csv_buffer,
-                            file_name="Clientes_add.csv",
-                            mime="text/csv",
-                        )
+                        file_name = "Clientes_add"
+                        if download_format == "CSV":
+                            csv_buffer = BytesIO()
+                            clientes_df.to_csv(csv_buffer, index=False, encoding="utf-8")
+                            csv_buffer.seek(0)
+                            st.download_button(
+                                label="Clique para baixar",
+                                data=csv_buffer,
+                                file_name=f"{file_name}.csv",
+                                mime="text/csv",
+                            )
+                        else:  # XLSX
+                            xlsx_buffer = BytesIO()
+                            clientes_df.to_excel(xlsx_buffer, index=False, engine="openpyxl")
+                            xlsx_buffer.seek(0)
+                            st.download_button(
+                                label="Clique para baixar",
+                                data=xlsx_buffer,
+                                file_name=f"{file_name}.xlsx",
+                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            )
                     except Exception as e:
                         st.error(f"Erro ao exportar clientes: {e}")
             with col2_add:
@@ -379,10 +633,10 @@ with tab_client:
                                 session.commit()
                                 # Retrieve the newly added client to get Id_empresa
                                 new_cliente = session.query(Cliente).filter_by(
-                                    Nome_da_Empresa=row["Nome_da_Empresa"],
-                                    CNPJ=row["CNPJ"],
-                                    Telefone=row["Telefone"],
-                                    Email=row["Email"],
+                                    Nome_da_Empresa=str(row["Nome_da_Empresa"]),
+                                    CNPJ=str(row["CNPJ"]),
+                                    Telefone=str(row["Telefone"]),
+                                    Email=str(row["Email"]),
                                 ).first()
                                 # Generate payments for the new client
                                 generate_pagamentos(session, new_cliente)
@@ -396,8 +650,22 @@ with tab_client:
     with st.expander("Visualizar Clientes"):
         try:
             # Use pandas to read the SQL query into a DataFrame
-            query = "SELECT * FROM Clientes"
-            clientes_df = pd.read_sql(query, con=engine).loc[:, ["Nome_da_Empresa", "CNPJ", "Telefone", "Email", "Endereco", "Dia_do_Vencimento", "Valor_da_Conta"]]
+            clientes = session.query(Cliente).all()
+            # Convert ORM objects to a list of dicts for DataFrame
+            clientes_data = [
+                {
+                    "Nome_da_Empresa": c.Nome_da_Empresa,
+                    "CNPJ": c.CNPJ,
+                    "Telefone": c.Telefone,
+                    "Email": c.Email,
+                    "Endereco": c.Endereco,
+                    "Dia_do_Vencimento": c.Dia_do_Vencimento,
+                    "Valor_da_Conta": c.Valor_da_Conta,
+                }
+                for c in clientes
+            ]
+            clientes_df = pd.DataFrame(clientes_data)
+            clientes_df = clientes_df.loc[:, ["Nome_da_Empresa", "CNPJ", "Telefone", "Email", "Endereco", "Dia_do_Vencimento", "Valor_da_Conta"]]
             # Rename columns for better readability
             clientes_df.columns = ["Nome da Empresa", "CNPJ", "Telefone", "E-mail", "Endereço", "Dia do Vencimento", "Valor da Conta"]
 
@@ -463,29 +731,51 @@ with tab_client:
     with tab2_update:
         col1_update, col2_update = st.columns(2)
 
-        # Column to download a CSV file with all Cliente records
-        with col1_update:
-            st.write("Baixar todos os clientes em CSV")
-            if st.button("Baixar CSV", key="download_csv_update"):  
-                try:
-                    # Fetch all clients from the database
-                    query = "SELECT Id_empresa, Nome_da_Empresa, CNPJ, Telefone, Email, Endereco, Dia_do_Vencimento, Valor_da_Conta FROM Clientes"
-                    clientes_df = pd.read_sql(query, con=engine)
+    with col1_update:
+        st.write("Baixar todos os clientes em CSV ou XLSX")
+        download_format_update = st.selectbox("Formato do arquivo", ["XLSX","CSV"], key="download_format_update")
+        if st.button("Baixar Arquivo", key="download_file_update"):  
+            try:
+                # Fetch all clients from the database using ORM
+                clientes = session.query(Cliente).all()
+                # Convert ORM objects to a list of dicts for DataFrame
+                clientes_data = [
+                    {
+                        "Id_empresa": c.Id_empresa,
+                        "Nome_da_Empresa": c.Nome_da_Empresa,
+                        "CNPJ": c.CNPJ,
+                        "Telefone": c.Telefone,
+                        "Email": c.Email,
+                        "Endereco": c.Endereco,
+                        "Dia_do_Vencimento": c.Dia_do_Vencimento,
+                        "Valor_da_Conta": c.Valor_da_Conta,
+                    }
+                    for c in clientes
+                ]
+                clientes_df = pd.DataFrame(clientes_data)
 
-                    # Convert the DataFrame to a CSV file
+                if download_format_update == "CSV":
                     csv_buffer = BytesIO()
                     clientes_df.to_csv(csv_buffer, index=False, encoding="utf-8")
                     csv_buffer.seek(0)
-
-                    # Provide the CSV file for download
                     st.download_button(
                         label="Clique para baixar",
                         data=csv_buffer,
                         file_name="Clientes_update.csv",
                         mime="text/csv",
                     )
-                except Exception as e:
-                    st.error(f"Erro ao exportar clientes: {e}")
+                else:  # XLSX
+                    xlsx_buffer = BytesIO()
+                    clientes_df.to_excel(xlsx_buffer, index=False, engine="openpyxl")
+                    xlsx_buffer.seek(0)
+                    st.download_button(
+                        label="Clique para baixar",
+                        data=xlsx_buffer,
+                        file_name="Clientes_update.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    )
+            except Exception as e:
+                st.error(f"Erro ao exportar clientes: {e}")
 
         # Column to upload a CSV or Excel file for updates
         with col2_update:
@@ -579,25 +869,43 @@ with tab_client:
 
             # Column to download a CSV template for deletion
             with col1_delete:
-                st.write("Baixar modelo de CSV para exclusão")
-                if st.button("Baixar CSV", key="download_csv_delete"):
+                st.write("Baixar modelo de CSV ou XLSX para exclusão")
+                download_format_delete = st.selectbox("Formato do arquivo", ["XLSX", "CSV"], key="download_format_delete")
+                if st.button("Baixar Arquivo", key="download_file_delete"):
                     try:
-                        # Fetch all clients from the database
-                        query = "SELECT Id_empresa, Nome_da_Empresa, CNPJ FROM Clientes"
-                        clientes_df = pd.read_sql(query, con=engine)
+                        # Fetch all clients from the database using ORM
+                        clientes = session.query(Cliente).all()
+                        # Convert ORM objects to a list of dicts for DataFrame
+                        clientes_data = [
+                            {
+                                "Id_empresa": c.Id_empresa,
+                                "Nome_da_Empresa": c.Nome_da_Empresa,
+                                "CNPJ": c.CNPJ,
+                            }
+                            for c in clientes
+                        ]
+                        clientes_df = pd.DataFrame(clientes_data)
 
-                        # Convert the DataFrame to a CSV file
-                        csv_buffer = BytesIO()
-                        clientes_df.to_csv(csv_buffer, index=False, encoding="utf-8")
-                        csv_buffer.seek(0)
-
-                        # Provide the CSV file for download
-                        st.download_button(
-                            label="Clique para baixar",
-                            data=csv_buffer,
-                            file_name="Clientes_delete.csv",
-                            mime="text/csv",
-                        )
+                        if download_format_delete == "CSV":
+                            csv_buffer = BytesIO()
+                            clientes_df.to_csv(csv_buffer, index=False, encoding="utf-8")
+                            csv_buffer.seek(0)
+                            st.download_button(
+                                label="Clique para baixar",
+                                data=csv_buffer,
+                                file_name="Clientes_delete.csv",
+                                mime="text/csv",
+                            )
+                        else:  # XLSX
+                            xlsx_buffer = BytesIO()
+                            clientes_df.to_excel(xlsx_buffer, index=False, engine="openpyxl")
+                            xlsx_buffer.seek(0)
+                            st.download_button(
+                                label="Clique para baixar",
+                                data=xlsx_buffer,
+                                file_name="Clientes_delete.xlsx",
+                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            )
                     except Exception as e:
                         st.error(f"Erro ao exportar clientes: {e}")
 

@@ -6,10 +6,10 @@ st.logo("https://static.wixstatic.com/media/e2c1bb_0089a806f76e4f13849e3dc66ab3c
         size="large", 
         link="https://www.ecofuturebrasil.com", icon_image=None)
 
-pagamentos_page = st.Page("pagamentos.py", title="Próximos Vencimentos", icon=":material/notification_important:")
-analises_page = st.Page("analises.py", title="Análises", icon=":material/bar_chart:")
-cadastro_clientes_page = st.Page("cadastro_clientes.py", title="Atualização dos dados", icon=":material/add_circle:")
-configuracoes_page = st.Page("configuracoes.py", title="Configurações", icon=":material/settings:")
+pagamentos_page = st.Page("pagamentos.py", title="Próximos Vencimentos", icon=":material/notification_important:",default=True)
+analises_page = st.Page("analises.py", title="Análises", icon=":material/bar_chart:",default=False)
+cadastro_clientes_page = st.Page("cadastro_clientes.py", title="Atualização dos dados", icon=":material/add_circle:",default=False)
+configuracoes_page = st.Page("configuracoes.py", title="Configurações", icon=":material/settings:",default=False)
 
 
 # if not st.user.is_logged_in:

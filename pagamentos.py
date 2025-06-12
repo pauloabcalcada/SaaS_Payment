@@ -3,34 +3,35 @@ import streamlit as st
 from sqlalchemy.orm import sessionmaker
 from models.database import engine
 from models.tables import Pagamentos
-from configuracoes import load_parametro,send_email
-from funcs import decrypt_database
-import os
+from funcs import load_parametro,send_email
 
-key_decript = st.secrets["database"]["encryption_key"]
 
-if not os.path.exists('local_database.db'):
-    decrypt_database('encrypted_database.db', 'local_database.db', key_decript)
 
 # Create a new session
 Session = sessionmaker(bind=engine)
 session = Session()
 
-# Function to fetch pending payments with due dates within 30 days
+# Function to fetch pending payments with due dates within 30 days using ORM
 def get_pagamentos_pendentes():
-    query = """
-    SELECT 
-        *
-    FROM 
-        Pagamentos
-    WHERE 
-        [Status_Pagamento] = 'Pendente' AND 
-        [Status_Dias_Vencimento] IN ('Venceu entre 5 e 15 dias',
-            'Venceu há menos de 5 dias',
-            'Na data do Vencimento')
-    """
     try:
-        df = pd.read_sql_query(query, con=engine)
+        # Define the statuses to filter
+        status_list = [
+            'Venceu há mais de 15 dias',
+            'Venceu entre 5 e 15 dias',
+            'Venceu há menos de 5 dias',
+            'Na data do Vencimento',
+            '5 dias ou menos para o Vencimento',
+            '6-15 dias para o Vencimento'
+        ]
+        # Query using SQLAlchemy ORM
+        pagamentos = session.query(Pagamentos).filter(
+            Pagamentos.Status_Pagamento == 'Pendente',
+            Pagamentos.Status_Dias_Vencimento.in_(status_list)
+        ).all()
+        # Convert results to DataFrame
+        df = pd.DataFrame([p.__dict__ for p in pagamentos])
+        if not df.empty and '_sa_instance_state' in df.columns:
+            df = df.drop(columns=['_sa_instance_state'])
         return df
     except Exception as e:
         st.error(f"Erro ao executar a consulta: {e}")

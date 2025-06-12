@@ -4,14 +4,10 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from models.tables import Configuracoes
 from models.database import engine
-from funcs import send_email,decrypt_database
+from funcs import load_parametro,save_parametro
 import os
 
 
-key_decript = st.secrets["database"]["encryption_key"]
-
-if not os.path.exists('local_database.db'):
-    decrypt_database('encrypted_database.db', 'local_database.db', key_decript)
 
 
 # Create a new session
@@ -20,24 +16,7 @@ session = Session()
 
 
 
-# Load or initialize parameters
-def load_parametro(nome_parametro):
-    parametro = session.query(Configuracoes).filter_by(Nome_Parametro=nome_parametro).first()
-    if parametro:
-        # Handle boolean values explicitly for "use_tls"
-        if nome_parametro == "use_tls":
-            return parametro.Valor_Atual == "Yes"  # Return True if "Yes", False otherwise
-        return parametro.Valor_Atual
-    else:
-        return st.error(f"Parâmetro '{nome_parametro}' não encontrado no banco de dados.")
 
-def save_parametro(nome_parametro, valor_atual):
-    parametro = session.query(Configuracoes).filter_by(Nome_Parametro=nome_parametro).first()
-    if nome_parametro == "use_tls":
-        valor_atual = "Yes" if valor_atual else "No"  # Convert boolean to "Yes"/"No"
-    if parametro:
-        parametro.Valor_Atual = str(valor_atual)
-        session.commit()
 
 # Streamlit app
 st.title("Sistema de Alertas e Configurações de Remetente")

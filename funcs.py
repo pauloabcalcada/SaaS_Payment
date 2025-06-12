@@ -3,14 +3,15 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import pandas as pd
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import distinct
-from models.tables import Pagamentos
+from sqlalchemy import distinct,and_, extract
+from models.tables import Pagamentos,Configuracoes
 from models.database import engine
 from sqlalchemy.sql import text
 from datetime import datetime
 import calendar
 import streamlit as st
 from cryptography.fernet import Fernet
+
 
 # functions beginning
 
@@ -88,7 +89,6 @@ def categorize_status_dias_vencimento(days_difference):
 
 
 
-# Function to generate or update payment records for a client
 def generate_pagamentos(session, cliente):
     current_date = datetime.now()
     current_year = current_date.year
@@ -103,103 +103,62 @@ def generate_pagamentos(session, cliente):
 
         days_difference = (due_date - current_date).days
         status_dias_vencimento = categorize_status_dias_vencimento(days_difference)
-        data_do_pagamento =  None
-        dias_pagamento_vencimento =  None
-        
-        # Check if a payment record for this month already exists
-        existing_payment = session.execute(
-            text(
-                """
-                SELECT * FROM Pagamentos
-                WHERE Id_empresa = :id_empresa AND strftime('%Y-%m', Prazo_Vencimento) = :year_month
-                """
-            ),
-            {
-                "id_empresa": cliente.Id_empresa,
-                "year_month": f"{current_year}-{month:02d}",
-            },
-        ).mappings().first()
+        data_do_pagamento = None
+        dias_pagamento_vencimento = None
+        tipo_pagamento = "Mensalidade"  # Default value
+
+        # ORM query for existing payment in the same year, month, and Tipo_Pagamento
+        existing_payment = session.query(Pagamentos).filter(
+            Pagamentos.Id_empresa == cliente.Id_empresa,
+            extract('year', Pagamentos.Prazo_Vencimento) == current_year,
+            extract('month', Pagamentos.Prazo_Vencimento) == month,
+            Pagamentos.Tipo_Pagamento == tipo_pagamento
+        ).first()
 
         if existing_payment:
             # If the due date is in the past, update only Nome_da_Empresa and Email
-            if existing_payment["Status_Pagamento"] == "Pago" or (existing_payment["Status_Pagamento"] == "Pendente" and due_date < current_date):
-                session.execute(
-                    text(
-                        """
-                        UPDATE Pagamentos
-                        SET Nome_da_Empresa = :nome_da_empresa, Email = :email
-                        WHERE Id_empresa = :id_empresa AND strftime('%Y-%m', Prazo_Vencimento) = :year_month
-                        """
-                    ),
-                    {
-                        "nome_da_empresa": cliente.Nome_da_Empresa,
-                        "email": cliente.Email,
-                        "id_empresa": cliente.Id_empresa,
-                        "year_month": f"{current_year}-{month:02d}",
-                    },
-                )
+            if existing_payment.Status_Pagamento == "Pago" or (
+                existing_payment.Status_Pagamento == "Pendente" and due_date < current_date
+            ):
+                existing_payment.Nome_da_Empresa = cliente.Nome_da_Empresa
+                existing_payment.Email = cliente.Email
             # If the due date is today or in the future, update all fields
-            elif (existing_payment["Status_Pagamento"] == "Pendente" and due_date >= current_date):
-                session.execute(
-                    text(
-                        """
-                        UPDATE Pagamentos
-                        SET Nome_da_Empresa = :nome_da_empresa, Email = :email, Valor_da_Conta = :valor_da_conta,
-                            Prazo_Vencimento = :prazo_vencimento, Status_Pagamento = :status_pagamento,
-                            Status_Dias_Vencimento = :status_dias_vencimento, Data_do_Pagamento = :data_do_pagamento,
-                            Dias_Pagamento_Vencimento = :dias_pagamento_vencimento
-                        WHERE Id_empresa = :id_empresa AND strftime('%Y-%m', Prazo_Vencimento) = :year_month
-                        """
-                    ),
-                    {
-                        "nome_da_empresa": cliente.Nome_da_Empresa,
-                        "email": cliente.Email,
-                        "valor_da_conta": cliente.Valor_da_Conta,
-                        "prazo_vencimento": due_date.date(),
-                        "status_pagamento": "Pendente",
-                        "status_dias_vencimento": status_dias_vencimento,
-                        "data_do_pagamento": None,
-                        "dias_pagamento_vencimento": None,
-                        "id_empresa": cliente.Id_empresa,
-                        "year_month": f"{current_year}-{month:02d}",
-                    },
-                )
+            elif existing_payment.Status_Pagamento == "Pendente" and due_date >= current_date:
+                existing_payment.Nome_da_Empresa = cliente.Nome_da_Empresa
+                existing_payment.Email = cliente.Email
+                existing_payment.Valor_da_Conta = cliente.Valor_da_Conta
+                existing_payment.Prazo_Vencimento = due_date.date()
+                existing_payment.Status_Pagamento = "Pendente"
+                existing_payment.Status_Dias_Vencimento = status_dias_vencimento
+                existing_payment.Data_do_Pagamento = data_do_pagamento
+                existing_payment.Dias_Pagamento_Vencimento = dias_pagamento_vencimento
+                existing_payment.Tipo_Pagamento = tipo_pagamento
         else:
-
-        
             # If no record exists, insert a new payment record
             if month >= current_month:
-               
-                session.execute(
-                    text(
-                        """
-                        INSERT INTO Pagamentos (Id_empresa, Nome_da_Empresa, Prazo_Vencimento, Email, Valor_da_Conta,
-                                                Status_Pagamento, Status_Dias_Vencimento, Data_do_Pagamento, Dias_Pagamento_Vencimento)
-                        VALUES (:id_empresa, :nome_da_empresa, :prazo_vencimento, :email, :valor_da_conta, :status_pagamento,
-                                :status_dias_vencimento, :data_do_pagamento, :dias_pagamento_vencimento)
-                        """
-                    ),
-                    {
-                        "id_empresa": cliente.Id_empresa,
-                        "nome_da_empresa": cliente.Nome_da_Empresa,
-                        "prazo_vencimento": due_date.date(),
-                        "email": cliente.Email,
-                        "valor_da_conta": cliente.Valor_da_Conta,
-                        "status_pagamento": "Pendente",
-                        "status_dias_vencimento": status_dias_vencimento,
-                        "data_do_pagamento": data_do_pagamento,
-                        "dias_pagamento_vencimento": dias_pagamento_vencimento,
-                    },
+                novo_pagamento = Pagamentos(
+                    Id_empresa=cliente.Id_empresa,
+                    Nome_da_Empresa=cliente.Nome_da_Empresa,
+                    Prazo_Vencimento=due_date.date(),
+                    Email=cliente.Email,
+                    Valor_da_Conta=cliente.Valor_da_Conta,
+                    Status_Pagamento="Pendente",
+                    Status_Dias_Vencimento=status_dias_vencimento,
+                    Data_do_Pagamento=data_do_pagamento,
+                    Dias_Pagamento_Vencimento=dias_pagamento_vencimento,
+                    Tipo_Pagamento=tipo_pagamento
                 )
+                session.add(novo_pagamento)
+    session.commit()
 
     
 
 # Function to delete only future payment records (Status_Pagamento == "Pendente")
 def delete_pagamentos(session, id_empresa):
-    session.execute(
-        text("DELETE FROM Pagamentos WHERE Id_empresa = :id_empresa AND Status_Pagamento = 'Pendente'"),
-        {"id_empresa": id_empresa},
-    )
+    session.query(Pagamentos).filter(
+        Pagamentos.Id_empresa == id_empresa,
+        Pagamentos.Status_Pagamento == "Pendente"
+    ).delete(synchronize_session=False)
 
 
 def update_status_dias_vencimento(session):
@@ -234,27 +193,52 @@ def update_status_dias_vencimento(session):
         session.rollback()
         #print(f"Error updating Status_Dias_Vencimento: {e}")
 
+# Load or initialize parameters
+def load_parametro(nome_parametro):
+
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    parametro = session.query(Configuracoes).filter_by(Nome_Parametro=nome_parametro).first()
+    if parametro:
+        # Handle boolean values explicitly for "use_tls"
+        if nome_parametro == "use_tls":
+            return parametro.Valor_Atual == "Yes"  # Return True if "Yes", False otherwise
+        return parametro.Valor_Atual
+    else:
+        return st.error(f"Parâmetro '{nome_parametro}' não encontrado no banco de dados.")
+
+def save_parametro(nome_parametro, valor_atual):
+
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    parametro = session.query(Configuracoes).filter_by(Nome_Parametro=nome_parametro).first()
+    if nome_parametro == "use_tls":
+        valor_atual = "Yes" if valor_atual else "No"  # Convert boolean to "Yes"/"No"
+    if parametro:
+        parametro.Valor_Atual = str(valor_atual)
+        session.commit()
 
 
+# def decrypt_database(input_file, output_file, key):
+#     """
+#     Decrypts the encrypted SQLite database file.
+#     :param input_file: Path to the encrypted database file.
+#     :param output_file: Path to save the decrypted database file.
+#     :param key: Encryption key (used for decryption).
+#     """
+#     # Read the encrypted database file
+#     with open(input_file, 'rb') as f:
+#         encrypted_data = f.read()
 
-def decrypt_database(input_file, output_file, key):
-    """
-    Decrypts the encrypted SQLite database file.
-    :param input_file: Path to the encrypted database file.
-    :param output_file: Path to save the decrypted database file.
-    :param key: Encryption key (used for decryption).
-    """
-    # Read the encrypted database file
-    with open(input_file, 'rb') as f:
-        encrypted_data = f.read()
+#     # Decrypt the data
+#     fernet = Fernet(key)
+#     decrypted_data = fernet.decrypt(encrypted_data)
 
-    # Decrypt the data
-    fernet = Fernet(key)
-    decrypted_data = fernet.decrypt(encrypted_data)
-
-    # Save the decrypted data to a new file
-    with open(output_file, 'wb') as f:
-        f.write(decrypted_data)
+#     # Save the decrypted data to a new file
+#     with open(output_file, 'wb') as f:
+#         f.write(decrypted_data)
 
 # Load the encryption key from secrets.toml
 #encryption_key = st.secrets["database"]["encryption_key"]
