@@ -29,7 +29,7 @@ with tab1:
     status_pagamento_options = session.query(Pagamentos.Status_Pagamento).distinct().all()
     status_pagamento_options = [option[0] for option in status_pagamento_options]
     selected_status_pagamento = st.sidebar.multiselect(
-        "Status do Pagamento", status_pagamento_options, default="Pendente"
+        "Status do Pagamento", status_pagamento_options, default=["Pendente","Pago"]
     )
 
     # Filter: Periodo (start and end date)
@@ -197,10 +197,21 @@ with tab3:
                 .reset_index()
             )
 
+            # Soma total por mês (para exibir acima das barras)
+            total_mes_df = (
+                evolucao_df.groupby("Mes")["Valor_da_Conta"]
+                .sum()
+                .reset_index()
+                .rename(columns={"Valor_da_Conta": "Total_Mes"})
+            )
+
             # Ordena os meses cronologicamente
             evolucao_df["Mes_ord"] = pd.to_datetime(evolucao_df["Mes"], format="%m/%Y")
             evolucao_df = evolucao_df.sort_values("Mes_ord")
+            total_mes_df["Mes_ord"] = pd.to_datetime(total_mes_df["Mes"], format="%m/%Y")
+            total_mes_df = total_mes_df.sort_values("Mes_ord")
 
+            # Gráfico de barras empilhadas
             chart3 = (
                 alt.Chart(evolucao_df)
                 .mark_bar()
@@ -210,15 +221,37 @@ with tab3:
                     color=alt.Color("Status_Pagamento:N", title="Status do Pagamento"),
                     tooltip=["Mes", "Status_Pagamento", "Valor_da_Conta"]
                 )
-                .properties(title="Evolução Mensal por Status de Pagamento", width=800, height=400)
-                .configure_axis(
-                    labelFontSize=12,
-                    titleFontSize=14,
-                    labelLimit=200,
+            )
+
+                        # Gráfico de texto com o total acima de cada barra
+            # Gráfico de texto com o total acima de cada barra
+            text_chart = (
+                alt.Chart(total_mes_df)
+                .mark_text(
+                    align="center",
+                    baseline="bottom",
+                    dy=-5,  # deslocamento para cima da barra
+                    fontSize=13,
+                    fontWeight="bold"
+                )
+                .transform_calculate(
+                    label="'R$ ' + format(datum.Total_Mes / 1000, '.1f') + 'k'"
+                )
+                .encode(
+                    x=alt.X("Mes:N", sort=list(evolucao_df["Mes"].unique())),
+                    y=alt.Y("Total_Mes:Q"),
+                    text="label:N"
                 )
             )
 
-            st.altair_chart(chart3, use_container_width=True)
+            st.altair_chart((chart3 + text_chart).properties(
+                title="Evolução Mensal por Status de Pagamento", width=800, height=400
+            ).configure_axis(
+                labelFontSize=12,
+                titleFontSize=14,
+                labelLimit=200,
+            ), use_container_width=True)
+
             st.subheader("Evolução Mensal Detalhada")
             st.dataframe(evolucao_df.drop(columns=["Mes_ord"]), hide_index=True)
         else:
