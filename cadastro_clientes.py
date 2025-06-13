@@ -284,14 +284,16 @@ with tab_pagamentos:
                             # Normaliza datas
                             payments_df["Prazo_Vencimento"] = pd.to_datetime(payments_df["Prazo_Vencimento"]).dt.date
                             if "Data_do_Pagamento" in payments_df.columns:
-                                payments_df["Data_do_Pagamento"] = pd.to_datetime(payments_df["Data_do_Pagamento"], errors="coerce").dt.date
-
+                                payments_df["Data_do_Pagamento"] = pd.to_datetime(payments_df["Data_do_Pagamento"]).dt.date
+                            
                             # Verificação de pagamentos existentes
                             existing_payments = []
                             new_payments = []
                             for _, row in payments_df.iterrows():
                                 # Chave composta: Id_empresa, mês/ano de Prazo_Vencimento, Tipo_Pagamento
                                 prazo_vencimento = row["Prazo_Vencimento"]
+                                if pd.isnull(prazo_vencimento) or str(prazo_vencimento) == "NaT":
+                                    prazo_vencimento = None
                                 tipo_pagamento = row["Tipo_Pagamento"]
                                 id_empresa = row["Id_empresa"]
                                 month = prazo_vencimento.month
@@ -330,17 +332,24 @@ with tab_pagamentos:
                                                     (payments_df["Prazo_Vencimento"] == ep["Prazo_Vencimento"]) &
                                                     (payments_df["Tipo_Pagamento"] == ep["Tipo_Pagamento"])
                                                 ].iloc[0]
+                                                # Ajuste para Data_do_Pagamento: converter branco/NaT para None
+                                                data_pagamento = row["Data_do_Pagamento"]
+                                                if pd.isnull(data_pagamento) or str(data_pagamento) == "NaT":
+                                                    data_pagamento = None
                                                 pagamento.Nome_da_Empresa = row["Nome_da_Empresa"]
                                                 pagamento.Prazo_Vencimento = row["Prazo_Vencimento"]
                                                 pagamento.Email = row["Email"]
                                                 pagamento.Valor_da_Conta = float(row["Valor_da_Conta"]) if pd.notnull(row["Valor_da_Conta"]) else None
                                                 pagamento.Status_Pagamento = row["Status_Pagamento"]
                                                 pagamento.Status_Dias_Vencimento = row["Status_Dias_Vencimento"]
-                                                pagamento.Data_do_Pagamento = row["Data_do_Pagamento"]
+                                                pagamento.Data_do_Pagamento = data_pagamento
                                                 pagamento.Dias_Pagamento_Vencimento = int(row["Dias_Pagamento_Vencimento"]) if pd.notnull(row["Dias_Pagamento_Vencimento"]) else None
                                                 pagamento.Tipo_Pagamento = row["Tipo_Pagamento"]
                                         # Adiciona novos pagamentos
                                         for row in new_payments:
+                                            data_pagamento = row["Data_do_Pagamento"]
+                                            if pd.isnull(data_pagamento) or str(data_pagamento) == "NaT":
+                                                data_pagamento = None
                                             novo_pagamento = Pagamentos(
                                                 Id_empresa=int(row["Id_empresa"]),
                                                 Nome_da_Empresa=row["Nome_da_Empresa"],
@@ -366,6 +375,9 @@ with tab_pagamentos:
                                 # Se não houver conflitos, adiciona todos como novos pagamentos
                                 try:
                                     for _, row in payments_df.iterrows():
+                                        data_pagamento = row["Data_do_Pagamento"]
+                                        if pd.isnull(data_pagamento) or str(data_pagamento) == "NaT":
+                                            data_pagamento = None
                                         novo_pagamento = Pagamentos(
                                             Id_empresa=row["Id_empresa"],
                                             Nome_da_Empresa=row["Nome_da_Empresa"],
@@ -374,10 +386,9 @@ with tab_pagamentos:
                                             Valor_da_Conta=row["Valor_da_Conta"],
                                             Status_Pagamento=row["Status_Pagamento"],
                                             Status_Dias_Vencimento=row["Status_Dias_Vencimento"],
-                                            Data_do_Pagamento=row["Data_do_Pagamento"],
+                                            Data_do_Pagamento=data_pagamento,
                                             Dias_Pagamento_Vencimento=row["Dias_Pagamento_Vencimento"],
-                                            Tipo_Pagamento=row["Tipo_Pagamento"],
-                                        )
+                                            Tipo_Pagamento=row["Tipo_Pagamento"],)
                                         session.add(novo_pagamento)
                                     session.commit()
                                     st.success("Pagamentos adicionados com sucesso!")
