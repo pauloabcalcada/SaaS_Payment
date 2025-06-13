@@ -105,6 +105,7 @@ with tab_pagamentos:
                     text('TO_CHAR("Prazo_Vencimento", \'YYYY-MM\') = :year_month'),
                 ).params(year_month=f"{selected_year}-{selected_month:02d}").first()
 
+                cliente = session.query(Cliente).filter(Cliente.Id_empresa == selected_id).first()
                 # Store the state to indicate an existing payment or new payment details
                 st.session_state["payment_action"] = {
                     "existing_payment": existing_payment,
@@ -115,6 +116,8 @@ with tab_pagamentos:
                     "tipo_pagamento": tipo_pagamento,
                 }
 
+            cliente = session.query(Cliente).filter(Cliente.Id_empresa == selected_id).first()
+
             # Handle existing payment actions
             if "payment_action" in st.session_state:
                 payment_action = st.session_state["payment_action"]
@@ -122,7 +125,7 @@ with tab_pagamentos:
                 prazo_vencimento = payment_action["prazo_vencimento"]
                 data_pagamento = payment_action["data_pagamento"]
                 valor_pagamento = payment_action["valor_pagamento"]
-                cliente = payment_action["cliente"]
+                cliente = cliente
                 tipo_pagamento = payment_action["tipo_pagamento"]
 
                 if existing_payment:
@@ -138,6 +141,7 @@ with tab_pagamentos:
                                 # Fetch the existing payment(s) for the given month and client
                                 pagamentos_to_update = session.query(Pagamentos).filter(
                                     Pagamentos.Id_empresa == cliente.Id_empresa,
+                                    Pagamentos.Tipo_Pagamento == tipo_pagamento,
                                     text('TO_CHAR("Prazo_Vencimento", \'YYYY-MM\') = :year_month'),
                                 ).params(year_month=f"{selected_year}-{selected_month:02d}").all()
 
