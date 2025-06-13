@@ -101,6 +101,7 @@ with tab_pagamentos:
 
                 existing_payment = session.query(Pagamentos).filter(
                     Pagamentos.Id_empresa == cliente.Id_empresa,
+                    Pagamentos.Tipo_Pagamento == tipo_pagamento,
                     text('TO_CHAR("Prazo_Vencimento", \'YYYY-MM\') = :year_month'),
                 ).params(year_month=f"{selected_year}-{selected_month:02d}").first()
 
@@ -131,6 +132,8 @@ with tab_pagamentos:
                     with col1_add_pay:
                         if st.button("Substituir o pagamento existente", key="replace_payment"):
                             try:
+                                Session = sessionmaker(bind=engine)
+                                session = Session()
                                 # Explicitly update the existing payment using an SQL query
                                 # Fetch the existing payment(s) for the given month and client
                                 pagamentos_to_update = session.query(Pagamentos).filter(
@@ -158,6 +161,8 @@ with tab_pagamentos:
                     with col2_add_pay:
                         if st.button("Adicionar outro pagamento para este mês", key="add_new_payment"):
                             try:
+                                Session = sessionmaker(bind=engine)
+                                session = Session()
                                 # Insert a new payment for the same month
                                 new_pagamento = Pagamentos(
                                     Id_empresa=cliente.Id_empresa,

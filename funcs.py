@@ -44,28 +44,7 @@ def send_email(remetente_email, remetente_password, smtp_server, smtp_port, use_
 
 
 
-# Function to retrieve distinct Status_Dias_Vencimento for Pendente payments using ORM
-def get_distinct_status_dias_vencimento():
-    # Create a new session
-    Session = sessionmaker(bind=engine)
-    session = Session()
 
-    try:
-        # Query distinct Status_Dias_Vencimento where Status_Pagamento = 'Pendente'
-        results = session.query(
-            distinct(Pagamentos.Status_Dias_Vencimento)
-        ).filter(
-            Pagamentos.Status_Pagamento == 'Pendente'
-        ).all()
-
-        # Convert the results to a DataFrame
-        df = pd.DataFrame(results, columns=["Status_Dias_Vencimento"])
-        return df
-    except Exception as e:
-        print(f"Erro ao executar a consulta: {e}")
-        return None
-    finally:
-        session.close()
 
 # Function to retrieve distinct Status_Dias_Vencimento for Pago payments using ORM
 def categorize_status_dias_vencimento(days_difference):
