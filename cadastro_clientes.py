@@ -216,6 +216,7 @@ with tab_pagamentos:
                 download_format_pay = st.selectbox("Formato do arquivo", ["XLSX", "CSV"], key="download_format_pay")
                 if st.button("Baixar Arquivo", key="download_file_pay"):
                     try:
+                        update_status_dias_vencimento(session)
                         pagamentos = session.query(Pagamentos).all()
                         pagamentos_data = [
                             {
@@ -266,6 +267,7 @@ with tab_pagamentos:
 
                 if uploaded_file is not None:
                     try:
+                        
                         if uploaded_file.name.endswith(".csv"):
                             payments_df = pd.read_csv(uploaded_file, sep=None, engine="python")
                         elif uploaded_file.name.endswith((".xlsx", ".xls")):
@@ -395,6 +397,7 @@ with tab_pagamentos:
                                 except Exception as e:
                                     session.rollback()
                                     st.error(f"Erro ao adicionar pagamentos: {e}")
+                        update_status_dias_vencimento(session)  # Update status after import
                     except Exception as e:
                         session.rollback()
                         st.error(f"Erro ao importar pagamentos: {e}")        

@@ -164,34 +164,48 @@ def delete_pagamentos(session, id_empresa):
 def update_status_dias_vencimento(session):
     """
     Updates the Status_Dias_Vencimento column for all records in the Pagamentos table
-    where Status_Pagamento is 'Pendente'.
+    where Status_Pagamento is 'Pendente'. Also updates Dias_Pagamento_Vencimento for all records where Data_do_Pagamento is not null.
     """
     try:
-        # Fetch all records with Status_Pagamento == 'Pendente'
+        # Update Status_Dias_Vencimento for pending payments
         pending_payments = session.query(Pagamentos).filter(Pagamentos.Status_Pagamento == "Pendente").all()
-
-        # Get the current date
         current_date = datetime.now().date()
-
-        # Iterate through the fetched records and update Status_Dias_Vencimento
         for payment in pending_payments:
             prazo_vencimento = payment.Prazo_Vencimento
-
-            # Calculate days difference
             days_difference = (prazo_vencimento - current_date).days
-
-            # Categorize the status
             status_dias_vencimento = categorize_status_dias_vencimento(days_difference)
-
-            # Update the record
             payment.Status_Dias_Vencimento = status_dias_vencimento
 
-        # Commit the changes
+        # Update Status_Dias_Vencimento for paid payments
+        paid_payments = session.query(Pagamentos).filter(Pagamentos.Status_Pagamento == "Pago").all()
+        for payment in paid_payments:
+            prazo_vencimento = payment.Prazo_Vencimento
+            data_do_pagamento = payment.Data_do_Pagamento
+            if data_do_pagamento is not None:
+                # Ensure both are date objects
+                if isinstance(prazo_vencimento, datetime):
+                    prazo_vencimento = prazo_vencimento.date()
+                if isinstance(data_do_pagamento, datetime):
+                    data_do_pagamento = data_do_pagamento.date()
+            days_difference = (prazo_vencimento - data_do_pagamento).days
+            status_dias_vencimento = categorize_status_dias_vencimento(days_difference)
+            payment.Status_Dias_Vencimento = status_dias_vencimento
+
+        # Update Dias_Pagamento_Vencimento for all payments where Data_do_Pagamento is not None
+        pagamentos_com_data = session.query(Pagamentos).filter(Pagamentos.Data_do_Pagamento != None).all()
+        for payment in pagamentos_com_data:
+            pagamento_date = payment.Data_do_Pagamento
+            prazo_vencimento = payment.Prazo_Vencimento
+            # Ensure both are date objects
+            if isinstance(pagamento_date, datetime):
+                pagamento_date = pagamento_date.date()
+            if isinstance(prazo_vencimento, datetime):
+                prazo_vencimento = prazo_vencimento.date()
+            payment.Dias_Pagamento_Vencimento = (pagamento_date - prazo_vencimento).days
+
         session.commit()
-        #print("Status_Dias_Vencimento updated successfully for all pending payments.")
-    except Exception as e:
+    except Exception:
         session.rollback()
-        #print(f"Error updating Status_Dias_Vencimento: {e}")
 
 # Load or initialize parameters
 def load_parametro(nome_parametro):

@@ -3,7 +3,7 @@ import streamlit as st
 from sqlalchemy.orm import sessionmaker
 from models.database import engine
 from models.tables import Pagamentos
-from funcs import load_parametro,send_email
+from funcs import load_parametro,send_email,update_status_dias_vencimento
 
 
 
@@ -123,6 +123,7 @@ def get_email_alerts():
 def display_pagamentos_page():
     st.title("Gestão de Pagamentos")
 
+    update_status_dias_vencimento(session)
     # Section 1: Display pending payments
     st.header("Pagamentos Pendentes com Vencimentos em até 15 dias")
     df_pendentes = get_pagamentos_pendentes()
